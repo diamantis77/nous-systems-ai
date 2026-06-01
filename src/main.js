@@ -1,6 +1,6 @@
 (function () {
   const { useEffect, useMemo, useRef, useState } = React;
-  const { AnimatePresence, motion } = Motion;
+  const { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } = Motion;
 
   const h = (type, props, ...children) =>
     React.createElement(
@@ -54,6 +54,39 @@
     );
   }
 
+  function HeroLogoMedia() {
+    const [videoFailed, setVideoFailed] = useState(false);
+
+    if (videoFailed) {
+      return h("img", {
+        className: "hero-logo",
+        src: logoPath,
+        alt: "Nous Systems AI logo",
+        width: 1536,
+        height: 1024,
+        decoding: "async",
+        fetchPriority: "high",
+        onError: useLogoFallback
+      });
+    }
+
+    return h(
+      "video",
+      {
+        className: "hero-logo hero-logo-video",
+        autoPlay: true,
+        loop: true,
+        muted: true,
+        playsInline: true,
+        preload: "metadata",
+        poster: logoPath,
+        "aria-label": "Nous Systems AI animated logo",
+        onError: () => setVideoFailed(true)
+      },
+      h("source", { src: animatedLogoPath, type: "video/mp4", onError: () => setVideoFailed(true) })
+    );
+  }
+
   const reveal = (delay = 0) => ({
     initial: { opacity: 0, y: 30 },
     whileInView: { opacity: 1, y: 0 },
@@ -81,6 +114,7 @@
         ["AI Running", "Response Time < 5 sec"],
         ["Secure", "Built For Real Businesses"]
       ],
+      scrollSystemLabels: ["AI ONLINE", "LEAD CAPTURE ACTIVE", "AUTOMATION RUNNING", "RESPONSE TIME < 5s"],
       livePanel: {
         title: "Live System",
         state: "AI online",
@@ -707,23 +741,22 @@
     );
   }
 
-  function LogoStage() {
+  function LogoStage({ style }) {
     return h(
       motion.div,
       {
-        className: "logo-stage",
-        animate: { y: [0, -6, 0] },
-        transition: { repeat: Infinity, duration: 8, ease: "easeInOut" }
+        className: "logo-stage cinematic-logo-stage",
+        style
       },
       h("div", { className: "logo-stage-grid", "aria-hidden": "true" }),
       h("div", { className: "logo-light-sweep", "aria-hidden": "true" }),
       h("div", { className: "logo-orbit orbit-a", "aria-hidden": "true" }),
       h("div", { className: "logo-energy-line", "aria-hidden": "true" }),
-      h("img", { className: "hero-logo", src: logoPath, alt: "Nous Systems AI logo", width: 1536, height: 1024, decoding: "async", fetchPriority: "high", onError: useLogoFallback })
+      h(HeroLogoMedia)
     );
   }
 
-  function HeroSystemStatus({ lang }) {
+  function HeroSystemStatus({ lang, style }) {
     const statusItems = content[lang].heroStatus;
 
     return h(
@@ -732,6 +765,7 @@
         className: "hero-system-status",
         initial: { opacity: 0, y: 18 },
         animate: { opacity: 1, y: 0 },
+        style,
         transition: { duration: 0.6, delay: 1.02, ease: smoothEase },
         "aria-label": "Live system status"
       },
@@ -747,7 +781,7 @@
     );
   }
 
-  function LiveAutomationPanel({ lang }) {
+  function LiveAutomationPanel({ lang, style }) {
     const panel = content[lang].livePanel;
 
     return h(
@@ -756,6 +790,7 @@
         className: "live-automation-panel",
         initial: { opacity: 0, x: 28, y: 14 },
         animate: { opacity: 1, x: 0, y: 0 },
+        style,
         transition: { duration: 0.7, delay: 1.12, ease: smoothEase },
         "aria-hidden": "true"
       },
@@ -794,10 +829,46 @@
 
   function Hero({ lang }) {
     const c = content[lang];
+    const heroRef = useRef(null);
+    const shouldReduceMotion = useReducedMotion();
+    const { scrollYProgress } = useScroll({
+      target: heroRef,
+      offset: ["start start", "end start"]
+    });
+    const logoScale = useTransform(scrollYProgress, [0, 1], [1.08, 0.82]);
+    const logoY = useTransform(scrollYProgress, [0, 1], [0, -42]);
+    const logoRotateX = useTransform(scrollYProgress, [0, 1], [0, 5]);
+    const logoRotateY = useTransform(scrollYProgress, [0, 1], [0, -7]);
+    const logoZ = useTransform(scrollYProgress, [0, 1], [70, 12]);
+    const copyY = useTransform(scrollYProgress, [0, 1], [0, -18]);
+    const panelY = useTransform(scrollYProgress, [0, 1], [0, 34]);
+    const panelRotateY = useTransform(scrollYProgress, [0, 1], [0, -4]);
+    const statusY = useTransform(scrollYProgress, [0, 1], [0, -10]);
+    const labelY = useTransform(scrollYProgress, [0, 1], [0, 26]);
+    const ambientY = useTransform(scrollYProgress, [0, 1], [0, 78]);
+    const ambientOpacity = useTransform(scrollYProgress, [0, 0.58, 1], [0.74, 0.5, 0.18]);
+    const scrollLabels =
+      c.scrollSystemLabels ||
+      (lang === "el"
+        ? ["AI ΕΝΕΡΓΟ", "ΣΥΛΛΟΓΗ LEADS ΕΝΕΡΓΗ", "ΑΥΤΟΜΑΤΙΣΜΟΣ ΕΝΕΡΓΟΣ", "ΑΠΟΚΡΙΣΗ < 5δ"]
+        : ["AI ONLINE", "LEAD CAPTURE ACTIVE", "AUTOMATION RUNNING", "RESPONSE TIME < 5s"]);
+
+    const logoMotion = shouldReduceMotion
+      ? { scale: 1, y: 0, rotateX: 0, rotateY: 0, z: 0, transformPerspective: 1200 }
+      : { scale: logoScale, y: logoY, rotateX: logoRotateX, rotateY: logoRotateY, z: logoZ, transformPerspective: 1200 };
+    const panelMotion = shouldReduceMotion ? {} : { y: panelY, rotateY: panelRotateY, transformPerspective: 1000 };
+    const copyMotion = shouldReduceMotion ? {} : { y: copyY };
+    const statusMotion = shouldReduceMotion ? {} : { y: statusY };
 
     return h(
       "section",
-      { className: "hero", id: "top" },
+      { className: "hero cinematic-hero", id: "top", ref: heroRef },
+      h(motion.div, {
+        className: "hero-scroll-aurora",
+        style: shouldReduceMotion ? { opacity: 0.28 } : { y: ambientY, z: -80, transformPerspective: 1200, opacity: ambientOpacity },
+        "aria-hidden": "true"
+      }),
+      h("div", { className: "scroll-progress-rail", "aria-hidden": "true" }, h(motion.span, { style: { scaleX: shouldReduceMotion ? 1 : scrollYProgress } })),
       h(
         motion.div,
         {
@@ -806,41 +877,51 @@
           animate: { opacity: 1, y: 0 },
           transition: { duration: 0.75, delay: 0.55, ease: smoothEase }
         },
-        h(LogoStage),
-        h(LiveAutomationPanel, { lang }),
-        h("div", { className: "hero-kicker" }, c.heroKicker),
-        h("h1", null, c.heroTitle),
-        h("p", null, c.heroCopy),
+        h(LogoStage, { style: logoMotion }),
+        h(LiveAutomationPanel, { lang, style: panelMotion }),
         h(
-          "div",
-          { className: "hero-actions" },
+          motion.div,
+          { className: "scroll-system-labels", style: shouldReduceMotion ? {} : { y: labelY }, "aria-hidden": "true" },
+          scrollLabels.map((label, index) => h("span", { className: `system-float-label label-${index + 1}`, key: label }, label))
+        ),
+        h(
+          motion.div,
+          { className: "hero-copy-layer", style: copyMotion },
+          h("div", { className: "hero-kicker" }, c.heroKicker),
+          h("h1", null, c.heroTitle),
+          h("p", null, c.heroCopy),
           h(
-            motion.a,
-            { className: "btn btn-primary", href: "#contact", whileTap: { scale: 0.98 } },
-            c.primaryCta,
-            h(Icon, { name: "calendar-check" })
+            "div",
+            { className: "hero-actions" },
+            h(
+              motion.a,
+              { className: "btn btn-primary", href: "#contact", whileTap: { scale: 0.98 } },
+              c.primaryCta,
+              h(Icon, { name: "calendar-check" })
+            ),
+            h(
+              motion.a,
+              { className: "btn btn-ghost", href: "#how", whileTap: { scale: 0.98 } },
+              c.secondaryCta,
+              h(Icon, { name: "arrow-down" })
+            )
           ),
           h(
-            motion.a,
-            { className: "btn btn-ghost", href: "#how", whileTap: { scale: 0.98 } },
-            c.secondaryCta,
-            h(Icon, { name: "arrow-down" })
+            "div",
+            { className: "outcome-badges", "aria-label": "Business outcomes" },
+            c.trustBadges.map((badge) =>
+              h("div", { className: "outcome-badge", key: badge }, h(Icon, { name: "check-circle-2" }), h("span", null, badge))
+            )
           )
         ),
-        h(
-          "div",
-          { className: "outcome-badges", "aria-label": "Business outcomes" },
-          c.trustBadges.map((badge) =>
-            h("div", { className: "outcome-badge", key: badge }, h(Icon, { name: "check-circle-2" }), h("span", null, badge))
-          )
-        ),
-        h(HeroSystemStatus, { lang }),
+        h(HeroSystemStatus, { lang, style: statusMotion }),
         h(
           motion.div,
           {
             className: "hero-metrics",
             initial: { opacity: 0, y: 16 },
             animate: { opacity: 1, y: 0 },
+            style: statusMotion,
             transition: { duration: 0.65, delay: 0.85, ease: smoothEase }
           },
           c.heroMetrics.map(([value, label]) =>
@@ -868,10 +949,14 @@
             h(
               motion.article,
               {
-                className: "glass-card",
+                className: "glass-card service-3d-card",
                 key: service.title,
-                ...reveal(index * 0.04),
-                whileHover: { y: -6 }
+                initial: { opacity: 0, y: 38, rotateX: 8, rotateY: index % 2 === 0 ? -4 : 4, scale: 0.965 },
+                whileInView: { opacity: 1, y: 0, rotateX: 0, rotateY: 0, scale: 1 },
+                viewport: { once: true, amount: 0.24 },
+                transition: { duration: 0.76, delay: index * 0.055, ease: smoothEase },
+                whileHover: { y: -8, rotateX: 3, rotateY: index % 2 === 0 ? 2.5 : -2.5, scale: 1.015 },
+                style: { transformPerspective: 1100 }
               },
               h(
                 "div",
@@ -976,10 +1061,19 @@
 
   function HowItWorks({ lang }) {
     const c = content[lang];
+    const timelineRef = useRef(null);
+    const shouldReduceMotion = useReducedMotion();
+    const { scrollYProgress } = useScroll({
+      target: timelineRef,
+      offset: ["start 76%", "end 42%"]
+    });
+    const lineScaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
+    const panelY = useTransform(scrollYProgress, [0, 1], [28, -16]);
+    const panelRotateY = useTransform(scrollYProgress, [0, 1], [4, -3]);
 
     return h(
       "section",
-      { className: "section", id: "how" },
+      { className: "section", id: "how", ref: timelineRef },
       h(
         "div",
         { className: "section-inner timeline-wrap" },
@@ -989,12 +1083,37 @@
           h(SectionIntro, { eyebrow: c.howEyebrow, title: c.howTitle, copy: c.howCopy }),
           h(
             "div",
-            { className: "timeline" },
+            { className: "timeline timeline-activation" },
+            h(motion.div, {
+              className: "timeline-progress-line",
+              style: { scaleY: shouldReduceMotion ? 1 : lineScaleY },
+              "aria-hidden": "true"
+            }),
             c.howSteps.map(([title, copy], index) =>
               h(
                 motion.article,
-                { className: "timeline-item", key: title, ...reveal(index * 0.08) },
-                h("div", { className: "timeline-marker" }, index + 1),
+                {
+                  className: "timeline-item timeline-activation-step",
+                  key: title,
+                  initial: { opacity: 0, y: 28, rotateX: 4 },
+                  whileInView: { opacity: 1, y: 0, rotateX: 0 },
+                  viewport: { once: true, amount: 0.38 },
+                  transition: { duration: 0.68, delay: index * 0.09, ease: smoothEase }
+                },
+                h(
+                  motion.div,
+                  {
+                    className: "timeline-marker",
+                    initial: { boxShadow: "inset 0 0 20px rgba(101, 234, 255, 0.1), 0 0 18px rgba(30, 167, 255, 0.12)" },
+                    whileInView: {
+                      boxShadow:
+                        "inset 0 0 22px rgba(101, 234, 255, 0.16), 0 0 34px rgba(101, 234, 255, 0.34), 0 0 0 6px rgba(101, 234, 255, 0.045)"
+                    },
+                    viewport: { once: true, amount: 0.7 },
+                    transition: { duration: 0.58, delay: 0.12 + index * 0.12, ease: smoothEase }
+                  },
+                  index + 1
+                ),
                 h("div", null, h("h3", null, title), h("p", null, copy))
               )
             )
@@ -1002,7 +1121,11 @@
         ),
         h(
           motion.div,
-          { className: "system-panel practical-panel", ...reveal(0.1) },
+          {
+            className: "system-panel practical-panel",
+            ...reveal(0.1),
+            style: shouldReduceMotion ? {} : { y: panelY, rotateY: panelRotateY, transformPerspective: 1200 }
+          },
           h("div", { className: "system-core" }),
           c.systemNodes.map((node, index) =>
             h("div", { className: `node-chip node-${["a", "b", "c", "d"][index]}`, key: node }, node)
