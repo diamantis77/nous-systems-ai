@@ -1,6 +1,7 @@
 dist/
 node_modules/
 .netlify/
+nous-systems-ai/
 .dev-server*.log
 qa-*.png
 .DS_Store
