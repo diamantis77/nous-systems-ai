@@ -1,0 +1,7 @@
+dist/
+node_modules/
+.netlify/
+.dev-server*.log
+qa-*.png
+.DS_Store
+Thumbs.db
