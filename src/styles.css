@@ -233,14 +233,23 @@ img {
   opacity: 0.78;
 }
 
+.brand-video-logo,
 .brand-mark img {
-  width: calc(100% - 6px);
-  height: calc(100% - 6px);
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: calc(100% - 10px);
+  height: 42px;
   object-fit: contain;
   object-position: center;
+  border-radius: 10px;
   mix-blend-mode: screen;
-  filter: contrast(1.1) saturate(1.12) drop-shadow(0 0 8px rgba(30, 167, 255, 0.42));
+  filter: contrast(1.08) saturate(1.12) drop-shadow(0 0 9px rgba(30, 167, 255, 0.38));
   transform: none;
+}
+
+.brand-video-logo {
+  background: rgba(5, 8, 22, 0.36);
 }
 
 .brand-name {
@@ -2785,6 +2794,12 @@ textarea.input-field {
   .brand-mark {
     width: 72px;
     height: 46px;
+  }
+
+  .brand-video-logo,
+  .brand-mark img {
+    height: 34px;
+    border-radius: 9px;
   }
 
   .brand-name {

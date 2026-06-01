@@ -11,6 +11,7 @@
 
   const logoPath = "./assets/nous-logo.webp";
   const logoFallbackPath = "./assets/nous-logo.png";
+  const animatedLogoPath = "/nous-logo-animated.mp4";
   const smoothEase = [0.22, 1, 0.36, 1];
 
   const useLogoFallback = (event) => {
@@ -18,6 +19,40 @@
       event.currentTarget.src = logoFallbackPath;
     }
   };
+
+  function BrandLogoMark() {
+    const [videoFailed, setVideoFailed] = useState(false);
+
+    return h(
+      "span",
+      { className: "brand-mark" },
+      videoFailed
+        ? h("img", {
+            className: "brand-static-logo",
+            src: logoPath,
+            alt: "",
+            width: 1536,
+            height: 1024,
+            decoding: "async",
+            onError: useLogoFallback
+          })
+        : h(
+            "video",
+            {
+              className: "brand-video-logo",
+              autoPlay: true,
+              loop: true,
+              muted: true,
+              playsInline: true,
+              preload: "metadata",
+              poster: logoPath,
+              "aria-hidden": true,
+              onError: () => setVideoFailed(true)
+            },
+            h("source", { src: animatedLogoPath, type: "video/mp4", onError: () => setVideoFailed(true) })
+          )
+    );
+  }
 
   const reveal = (delay = 0) => ({
     initial: { opacity: 0, y: 30 },
@@ -646,7 +681,7 @@
         h(
           "a",
           { href: "#top", className: "brand-lockup", "aria-label": "Nous Systems AI home" },
-          h("span", { className: "brand-mark" }, h("img", { src: logoPath, alt: "", width: 1536, height: 1024, decoding: "async", onError: useLogoFallback })),
+          h(BrandLogoMark),
           h("span", { className: "brand-name" }, "NOUS SYSTEMS AI")
         ),
         h(

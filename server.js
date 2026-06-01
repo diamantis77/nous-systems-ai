@@ -10,14 +10,23 @@ const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".mp4": "video/mp4",
   ".png": "image/png",
-  ".svg": "image/svg+xml"
+  ".svg": "image/svg+xml",
+  ".webm": "video/webm",
+  ".webp": "image/webp"
 };
 
 const server = http.createServer((request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
-  const safePath = path.normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, "");
-  const filePath = path.join(root, safePath === "\\" || safePath === "/" ? "index.html" : safePath);
+  const safePath = path
+    .normalize(decodeURIComponent(url.pathname))
+    .replace(/^(\.\.[/\\])+/, "")
+    .replace(/^[/\\]+/, "");
+  const requestPath = safePath === "" ? "index.html" : safePath;
+  const directPath = path.join(root, requestPath);
+  const publicPath = path.join(root, "public", requestPath);
+  const filePath = fs.existsSync(directPath) ? directPath : publicPath;
 
   if (!filePath.startsWith(root)) {
     response.writeHead(403);

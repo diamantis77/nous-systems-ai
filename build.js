@@ -4,6 +4,7 @@ const path = require("path");
 const root = __dirname;
 const dist = path.join(root, "dist");
 const entries = ["index.html", "server.js", "package.json", "assets", "src", "vendor"];
+const publicDir = path.join(root, "public");
 
 function copyEntry(source, destination) {
   const stats = fs.statSync(source);
@@ -28,6 +29,12 @@ fs.mkdirSync(dist, { recursive: true });
 
 for (const entry of entries) {
   copyEntry(path.join(root, entry), path.join(dist, entry));
+}
+
+if (fs.existsSync(publicDir)) {
+  for (const child of fs.readdirSync(publicDir)) {
+    copyEntry(path.join(publicDir, child), path.join(dist, child));
+  }
 }
 
 console.log(`Production static build created at ${dist}`);
