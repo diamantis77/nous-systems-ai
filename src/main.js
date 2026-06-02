@@ -666,6 +666,8 @@
   }
 
   function Loader({ loaded }) {
+    const [videoFailed, setVideoFailed] = useState(false);
+
     return h(
       AnimatePresence,
       null,
@@ -673,27 +675,69 @@
         h(
           motion.div,
           {
-            className: "loader",
+            className: "loader loader-activation",
             initial: { opacity: 1 },
-            exit: { opacity: 0, transition: { duration: 0.45, ease: smoothEase } }
+            exit: { opacity: 0, transition: { duration: 0.64, ease: smoothEase } }
           },
-          h(motion.div, {
-            className: "loader-ring",
-            animate: { rotate: 360 },
-            transition: { repeat: Infinity, duration: 3.2, ease: "linear" }
-          }),
-          h(motion.img, {
-            className: "loader-mark",
-            src: logoPath,
-            alt: "Nous Systems AI",
-            width: 1536,
-            height: 1024,
-            decoding: "async",
-            onError: useLogoFallback,
-            initial: { opacity: 0, scale: 0.96 },
-            animate: { opacity: 1, scale: 1 },
-            transition: { duration: 0.65, ease: smoothEase }
-          })
+          h(
+            "div",
+            { className: "loader-neural-field", "aria-hidden": "true" },
+            Array.from({ length: 14 }).map((_, index) => h("span", { className: `loader-particle particle-${index + 1}`, key: index }))
+          ),
+          h(
+            "div",
+            { className: "loader-interface", "aria-hidden": "true" },
+            h("div", { className: "loader-core-pulse" }),
+            h("div", { className: "loader-ring loader-ring-a" }),
+            h("div", { className: "loader-ring loader-ring-b" }),
+            h("div", { className: "loader-ring loader-ring-c" }),
+            h("div", { className: "loader-scan-sweep" }),
+            h("span", { className: "loader-orbit-node node-1" }),
+            h("span", { className: "loader-orbit-node node-2" }),
+            h("span", { className: "loader-orbit-node node-3" }),
+            h("span", { className: "loader-orbit-node node-4" })
+          ),
+          h(
+            motion.div,
+            {
+              className: "loader-logo-wrap",
+              initial: { opacity: 0, scale: 0.94 },
+              animate: { opacity: 1, scale: 1 },
+              transition: { duration: 0.86, delay: 0.12, ease: smoothEase }
+            },
+            videoFailed
+              ? h("img", {
+                  className: "loader-mark",
+                  src: logoPath,
+                  alt: "Nous Systems AI",
+                  width: 1536,
+                  height: 1024,
+                  decoding: "async",
+                  onError: useLogoFallback
+                })
+              : h(
+                  "video",
+                  {
+                    className: "loader-mark loader-video-mark",
+                    autoPlay: true,
+                    loop: true,
+                    muted: true,
+                    playsInline: true,
+                    preload: "metadata",
+                    poster: logoPath,
+                    "aria-label": "Nous Systems AI",
+                    onError: () => setVideoFailed(true)
+                  },
+                  h("source", { src: animatedLogoPath, type: "video/mp4", onError: () => setVideoFailed(true) })
+                )
+          ),
+          h(
+            "div",
+            { className: "loader-status", "aria-live": "polite" },
+            h("span", { className: "loader-status-initial" }, "Initializing Nous AI System..."),
+            h("span", { className: "loader-status-online" }, "AI Systems Online")
+          ),
+          h("div", { className: "loader-boot-line", "aria-hidden": "true" }, h("span", null))
         )
     );
   }
@@ -1721,7 +1765,7 @@ Keep answers under 120 words unless the user asks for detail.`;
     useLucideRefresh([loaded, lang]);
 
     useEffect(() => {
-      const timeout = window.setTimeout(() => setLoaded(true), 850);
+      const timeout = window.setTimeout(() => setLoaded(true), 2100);
       return () => window.clearTimeout(timeout);
     }, []);
 
