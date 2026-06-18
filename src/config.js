@@ -5,5 +5,8 @@ window.NOUS_CONFIG = {
 
   // Paste your Make.com AI chat webhook URL here.
   // This scenario should return JSON like: { "reply": "Your AI response..." }
-  MAKE_CHAT_WEBHOOK_URL: "https://hook.eu1.make.com/9i27m2jdi3tqnidepgfo5ppkj1opv468"
+  MAKE_CHAT_WEBHOOK_URL: "https://hook.eu1.make.com/9i27m2jdi3tqnidepgfo5ppkj1opv468",
+
+  // Optional: add a separate Make.com webhook later if you want testimonial review/approval.
+  MAKE_TESTIMONIAL_WEBHOOK_URL: ""
 };

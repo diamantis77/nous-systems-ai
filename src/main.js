@@ -167,6 +167,38 @@
           copy: "FAQ, routing and service workflows that reduce repetitive admin and support work."
         }
       ],
+      interactiveDemo: {
+        eyebrow: "Interactive AI System Demo",
+        title: "See How AI Would Work For Your Business",
+        copy:
+          "Choose your business type and see how custom AI systems could handle replies, bookings, leads, reviews and customer support.",
+        businessTypeLabel: "Business type",
+        businessNameLabel: "Business name",
+        businessNamePlaceholder: "e.g. Maria Dental Clinic",
+        modulesLabel: "Automation modules",
+        selectedModulesLabel: "{count} selected",
+        noModulesSelected: "No automation modules selected yet.",
+        noModulesHint: "Select one or more automations to see exactly how each module works in the live preview.",
+        previewLabel: "Live system preview",
+        previewStatus: "AI System Preview",
+        liveSimulation: "LIVE SIMULATION",
+        aiOnline: "AI Online",
+        customerLabel: "Customer",
+        aiLabel: "AI",
+        systemLabel: "System",
+        flowLabel: "Automation flow",
+        moduleBreakdownLabel: "Selected modules",
+        resultLabel: "Expected business outcomes",
+        primaryCta: "Build This For My Business",
+        secondaryCta: "Talk To The AI Assistant",
+        emptyBusiness: "your business",
+        previewTitle: "AI System Preview for {business}",
+        previewSubtitle: "{industry} · AI Online",
+        contactSummary: "I'm interested in AI systems for a {industry}. Selected automations: {modules}.",
+        chatPrompt: "How would this work for a {industry}?",
+        statusItems: ["AI ONLINE", "AUTOMATION RUNNING", "RESPONSE TIME < 5 SEC", "LEAD CAPTURE ACTIVE"],
+        baseFlow: ["Customer Message", "AI Understands Request", "Lead Captured", "Automation Triggered", "Owner Notified", "Follow-Up Ready"]
+      },
       industriesEyebrow: "Industries",
       industriesTitle: "Designed for Greek local businesses that depend on fast response.",
       industriesCopy:
@@ -230,6 +262,44 @@
         ["Focused on booked calls", "Every page, form and AI flow points customers toward a useful next step."],
         ["Human handoff included", "Important conversations can move to your team with context already collected."]
       ],
+      testimonialsEyebrow: "Μαρτυρίες",
+      testimonialsTitle: "Feedback from business owners who want fewer missed leads.",
+      testimonialsCopy:
+        "Starter feedback from the kinds of local businesses Nous Systems AI is built for. Visitors can leave their own note below.",
+      testimonials: [
+        {
+          name: "Clinic Owner",
+          role: "Private medical practice",
+          quote:
+            "The biggest win is knowing appointment requests and common questions can be handled instantly, even when the team is busy."
+        },
+        {
+          name: "Restaurant Manager",
+          role: "Hospitality business",
+          quote:
+            "Bookings and customer questions need fast replies. A system like this removes a lot of manual pressure from the team."
+        },
+        {
+          name: "Real Estate Consultant",
+          role: "Local service business",
+          quote:
+            "Capturing buyer details automatically before we call back would make every inquiry easier to follow up."
+        }
+      ],
+      testimonialForm: {
+        title: "Leave your feedback",
+        copy: "Share what you think about the AI demo or what automation would help your business most.",
+        name: "Your name",
+        role: "Business / role",
+        quote: "Your testimonial",
+        submit: "Submit Testimonial",
+        loading: "Submitting...",
+        success: "Thank you. Your testimonial was added.",
+        error: "Please add your name and testimonial before submitting.",
+        defaultRole: "Local business owner",
+        pendingReview: "New feedback",
+        optionalWebhookError: "Your testimonial was added locally, but the optional webhook did not receive it."
+      },
       demoTitle: "Want to see how this would work for your business?",
       demoCopy:
         "Book a free AI demo and we will map the first automation system that would save time or capture more leads for your business.",
@@ -271,6 +341,8 @@
         placeholder: "Ask about bookings, reviews or missed calls...",
         ready: "Ready to explain the system.",
         typing: "Assistant is typing...",
+        liveStatus: ["AI ONLINE", "Lead Capture Ready", "Response < 5 sec"],
+        typingSteps: ["Analyzing request...", "Generating response...", "Ready"],
         intro:
           "Hi — I’m the Nous AI Assistant. I can show you how AI systems help businesses automate replies, bookings and customer communication.",
         quickReplies: ["How does this work?", "Can this help my business?", "What automations do you offer?"],
@@ -370,6 +442,38 @@
           copy: "Συχνές ερωτήσεις, δρομολόγηση και ροές εξυπηρέτησης που μειώνουν την επαναλαμβανόμενη δουλειά."
         }
       ],
+      interactiveDemo: {
+        eyebrow: "Διαδραστική Επίδειξη AI",
+        title: "Δες Πώς Θα Δούλευε Το AI Για Τη Δική Σου Επιχείρηση",
+        copy:
+          "Διάλεξε τον τύπο επιχείρησης και δες πώς προσαρμοσμένα AI συστήματα μπορούν να χειριστούν απαντήσεις, κρατήσεις, leads, κριτικές και υποστήριξη πελατών.",
+        businessTypeLabel: "Τύπος επιχείρησης",
+        businessNameLabel: "Όνομα επιχείρησης",
+        businessNamePlaceholder: "π.χ. Maria Dental Clinic",
+        modulesLabel: "AI αυτοματισμοί",
+        selectedModulesLabel: "{count} επιλεγμένα",
+        noModulesSelected: "Δεν έχεις επιλέξει ακόμα AI αυτοματισμούς.",
+        noModulesHint: "Επίλεξε έναν ή περισσότερους αυτοματισμούς για να δεις πώς λειτουργεί κάθε module στην προεπισκόπηση.",
+        previewLabel: "Ζωντανή προεπισκόπηση συστήματος",
+        previewStatus: "Προεπισκόπηση AI Συστήματος",
+        liveSimulation: "ΖΩΝΤΑΝΗ ΠΡΟΣΟΜΟΙΩΣΗ",
+        aiOnline: "AI Συνδεδεμένο",
+        customerLabel: "Πελάτης",
+        aiLabel: "AI",
+        systemLabel: "Σύστημα",
+        flowLabel: "Ροή αυτοματισμού",
+        moduleBreakdownLabel: "Επιλεγμένοι αυτοματισμοί",
+        resultLabel: "Πιθανά επιχειρηματικά οφέλη",
+        primaryCta: "Φτιάξτε Το Για Την Επιχείρησή Μου",
+        secondaryCta: "Μίλα Με Τον AI Assistant",
+        emptyBusiness: "την επιχείρησή σου",
+        previewTitle: "Προεπισκόπηση AI συστήματος για {business}",
+        previewSubtitle: "{industry} · AI συνδεδεμένο",
+        contactSummary: "Με ενδιαφέρουν AI συστήματα για {industry}. Επιλεγμένοι αυτοματισμοί: {modules}.",
+        chatPrompt: "Πώς θα δούλευε αυτό για {industry};",
+        statusItems: ["AI ONLINE", "ΑΥΤΟΜΑΤΙΣΜΟΣ ΕΝΕΡΓΟΣ", "ΑΠΟΚΡΙΣΗ < 5 SEC", "LEAD CAPTURE ΕΝΕΡΓΟ"],
+        baseFlow: ["Μήνυμα Πελάτη", "Το AI Καταλαβαίνει Το Αίτημα", "Lead Συλλέχθηκε", "Αυτοματισμός Ενεργοποιήθηκε", "Η Ομάδα Ειδοποιήθηκε", "Follow-Up Έτοιμο"]
+      },
       industriesEyebrow: "Κλάδοι",
       industriesTitle: "Σχεδιασμένο για ελληνικές τοπικές επιχειρήσεις που χρειάζονται γρήγορη ανταπόκριση.",
       industriesCopy:
@@ -433,6 +537,44 @@
         ["Εστίαση σε κρατήσεις", "Κάθε σελίδα, φόρμα και ροή AI οδηγεί τον πελάτη στο σωστό επόμενο βήμα."],
         ["Μεταφορά σε άνθρωπο", "Σημαντικές συνομιλίες μπορούν να περάσουν στην ομάδα σου με ήδη συλλεγμένο πλαίσιο."]
       ],
+      testimonialsEyebrow: "Testimonials",
+      testimonialsTitle: "Σχόλια από ιδιοκτήτες που θέλουν λιγότερα χαμένα leads.",
+      testimonialsCopy:
+        "Αρχικά σχόλια από τους τύπους τοπικών επιχειρήσεων για τους οποίους είναι χτισμένο το Nous Systems AI. Οι επισκέπτες μπορούν να αφήσουν το δικό τους σχόλιο παρακάτω.",
+      testimonials: [
+        {
+          name: "Ιδιοκτήτης Ιατρείου",
+          role: "Ιδιωτικό ιατρείο",
+          quote:
+            "Το πιο σημαντικό είναι να μη χάνονται αιτήματα για ραντεβού όταν η ομάδα είναι απασχολημένη ή εκτός ωραρίου."
+        },
+        {
+          name: "Υπεύθυνος Εστιατορίου",
+          role: "Εστίαση / φιλοξενία",
+          quote:
+            "Οι κρατήσεις και οι ερωτήσεις πρέπει να απαντώνται γρήγορα. Ένα τέτοιο σύστημα μειώνει πολύ τη χειροκίνητη δουλειά."
+        },
+        {
+          name: "Σύμβουλος Real Estate",
+          role: "Τοπική επιχείρηση υπηρεσιών",
+          quote:
+            "Αν τα στοιχεία του ενδιαφερόμενου συλλέγονται αυτόματα πριν την κλήση, η παρακολούθηση γίνεται πολύ πιο εύκολη."
+        }
+      ],
+      testimonialForm: {
+        title: "Άφησε το σχόλιό σου",
+        copy: "Γράψε τι σκέφτεσαι για το AI demo ή ποιος αυτοματισμός θα βοηθούσε περισσότερο την επιχείρησή σου.",
+        name: "Το όνομά σου",
+        role: "Επιχείρηση / ρόλος",
+        quote: "Το σχόλιό σου",
+        submit: "Υποβολή Σχολίου",
+        loading: "Αποστολή...",
+        success: "Ευχαριστούμε. Το testimonial προστέθηκε.",
+        error: "Συμπλήρωσε όνομα και testimonial πριν την υποβολή.",
+        defaultRole: "Ιδιοκτήτης τοπικής επιχείρησης",
+        pendingReview: "Νέο σχόλιο",
+        optionalWebhookError: "Το testimonial προστέθηκε τοπικά, αλλά το προαιρετικό webhook δεν το έλαβε."
+      },
       demoTitle: "Θέλεις να δεις πώς θα λειτουργούσε για τη δική σου επιχείρηση;",
       demoCopy:
         "Κλείσε δωρεάν επίδειξη AI και θα χαρτογραφήσουμε το πρώτο σύστημα αυτοματοποίησης που μπορεί να σου γλιτώσει χρόνο ή να συλλέγει περισσότερες επαφές.",
@@ -474,6 +616,8 @@
         placeholder: "Ρώτησε για ραντεβού, κριτικές ή χαμένες κλήσεις...",
         ready: "Έτοιμο για εξήγηση.",
         typing: "Ο βοηθός πληκτρολογεί...",
+        liveStatus: ["AI ONLINE", "Lead Capture Ready", "Απόκριση < 5 sec"],
+        typingSteps: ["Ανάλυση αιτήματος...", "Δημιουργία απάντησης...", "Έτοιμο"],
         intro:
           "Γεια σου — είμαι ο AI Βοηθός της Nous. Μπορώ να σου δείξω πώς τα συστήματα AI αυτοματοποιούν απαντήσεις, ραντεβού και επικοινωνία πελατών.",
         quickReplies: ["Πώς λειτουργεί;", "Μπορεί να βοηθήσει την επιχείρησή μου;", "Τι αυτοματισμούς προσφέρετε;"],
@@ -796,7 +940,7 @@
       h("div", { className: "logo-light-sweep", "aria-hidden": "true" }),
       h("div", { className: "logo-orbit orbit-a", "aria-hidden": "true" }),
       h("div", { className: "logo-energy-line", "aria-hidden": "true" }),
-      h(HeroLogoMedia)
+      h("div", { className: "hero-logo-shell" }, h(HeroLogoMedia))
     );
   }
 
@@ -871,6 +1015,237 @@
     );
   }
 
+  const formatText = (template, values) =>
+    Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, value), template);
+
+  function getInteractiveDemoData(lang) {
+    if (lang === "el") {
+      return {
+        industries: [
+          {
+            id: "clinic",
+            icon: "stethoscope",
+            label: "Ιατρείο / Γιατρός",
+            shortDescription: "Συλλογή αιτημάτων ραντεβού, απαντήσεις σε FAQs και δρομολόγηση επειγόντων.",
+            greeting:
+              "Γεια σας, είμαι ο AI assistant για {business}. Μπορώ να απαντώ σε συχνές ερωτήσεις, να συλλέγω αιτήματα ραντεβού και να ειδοποιώ την ομάδα άμεσα.",
+            customer: "Θέλω να κλείσω ένα ραντεβού για αύριο.",
+            ai: "Βεβαίως. Ποια ώρα σας βολεύει και ποιο είναι το όνομα και το τηλέφωνό σας;",
+            system: "Αίτημα ραντεβού συλλέχθηκε · Η ομάδα ειδοποιήθηκε",
+            outcomes: ["Πιο γρήγορες απαντήσεις", "Λιγότερα χαμένα αιτήματα", "Περισσότερα αιτήματα ραντεβού", "Λιγότερη χειροκίνητη δουλειά"]
+          },
+          {
+            id: "dental",
+            icon: "badge-plus",
+            label: "Οδοντιατρείο",
+            shortDescription: "Αιτήματα για ραντεβού, συχνές ερωτήσεις και υπενθυμίσεις ασθενών.",
+            greeting:
+              "Γεια σας, είμαι ο AI assistant για {business}. Μπορώ να συλλέγω αιτήματα για ραντεβού, να απαντώ σε βασικές ερωτήσεις και να δρομολογώ επείγοντα περιστατικά στην ομάδα.",
+            customer: "Έχω πόνο στο δόντι και θέλω διαθέσιμο ραντεβού.",
+            ai: "Μπορώ να συλλέξω τα στοιχεία σας και την προτιμώμενη ώρα, ώστε να ειδοποιηθεί άμεσα το οδοντιατρείο.",
+            system: "Επείγον αίτημα δρομολογήθηκε · Στοιχεία ζητήθηκαν",
+            outcomes: ["Ταχύτερη ανταπόκριση", "Καλύτερη οργάνωση ραντεβού", "Λιγότερες χαμένες κλήσεις", "Υπενθυμίσεις follow-up"]
+          },
+          {
+            id: "restaurant",
+            icon: "utensils",
+            label: "Εστιατόριο",
+            shortDescription: "Ερωτήσεις κρατήσεων, ώρες λειτουργίας, menu FAQs και follow-ups.",
+            greeting:
+              "Γεια σας, μπορώ να βοηθήσω τους πελάτες να ρωτήσουν για διαθεσιμότητα, κρατήσεις, ώρες λειτουργίας και να στείλω τα στοιχεία στην ομάδα.",
+            customer: "Έχετε τραπέζι για 4 άτομα απόψε;",
+            ai: "Μπορώ να βοηθήσω. Τι ώρα θα θέλατε να έρθετε και σε ποιο όνομα να καταχωρήσω το αίτημα;",
+            system: "Αίτημα κράτησης συλλέχθηκε · Η ομάδα ειδοποιήθηκε",
+            outcomes: ["Πιο γρήγορες απαντήσεις", "Περισσότερα αιτήματα κρατήσεων", "Λιγότερα χαμένα μηνύματα", "Καλύτερη εμπειρία πελάτη"]
+          },
+          {
+            id: "hotel",
+            icon: "hotel",
+            label: "Ξενοδοχείο / Φιλοξενία",
+            shortDescription: "Απαντήσεις σε επισκέπτες, ενδιαφέρον κρατήσεων και αυτοματοποιημένα follow-ups.",
+            greeting:
+              "Γεια σας, μπορώ να απαντώ σε ερωτήσεις επισκεπτών, να συλλέγω ενδιαφέρον για κράτηση και να δρομολογώ αιτήματα στην ομάδα.",
+            customer: "Έχετε διαθέσιμο δωμάτιο για το Σαββατοκύριακο;",
+            ai: "Μπορώ να συλλέξω ημερομηνίες, αριθμό ατόμων και στοιχεία επικοινωνίας ώστε να σας απαντήσει η ομάδα.",
+            system: "Ενδιαφέρον κράτησης συλλέχθηκε · Follow-up έτοιμο",
+            outcomes: ["Καλύτερη ταχύτητα απάντησης", "Περισσότερα οργανωμένα αιτήματα", "Λιγότερη χειροκίνητη δουλειά", "Υποστήριξη 24/7"]
+          },
+          {
+            id: "law",
+            icon: "scale",
+            label: "Δικηγορικό Γραφείο",
+            shortDescription: "Αξιολόγηση αιτημάτων, συλλογή στοιχείων και δρομολόγηση υποθέσεων.",
+            greeting:
+              "Γεια σας, μπορώ να συλλέξω βασικά στοιχεία για νέο αίτημα και να το δρομολογήσω στο κατάλληλο άτομο χωρίς να παρέχω νομική συμβουλή.",
+            customer: "Χρειάζομαι βοήθεια με ένα συμβόλαιο.",
+            ai: "Μπορώ να συλλέξω λίγες πληροφορίες και να το δρομολογήσω σωστά. Αφορά εργασία, επιχείρηση, ακίνητο ή οικογενειακό θέμα;",
+            system: "Αίτημα αξιολογήθηκε · Ζητήθηκαν στοιχεία επικοινωνίας",
+            outcomes: ["Καλύτερη ταξινόμηση αιτημάτων", "Λιγότερα χαμένα leads", "Πιο γρήγορη ανθρώπινη συνέχεια", "Οργανωμένη πρώτη επαφή"]
+          },
+          {
+            id: "realEstate",
+            icon: "home",
+            label: "Μεσιτικό Γραφείο",
+            shortDescription: "Leads αγοραστών/ενοικιαστών, property FAQs και ειδοποίηση agents.",
+            greeting:
+              "Γεια σας, μπορώ να βοηθήσω αγοραστές και ενοικιαστές να ρωτήσουν για ακίνητα, να συλλέξω στοιχεία και να ειδοποιήσω την ομάδα.",
+            customer: "Ενδιαφέρομαι για το διαμέρισμα στο κέντρο.",
+            ai: "Τέλεια. Θέλετε αγορά ή ενοικίαση, ποιο budget έχετε και ποιο τηλέφωνο να δώσω στον agent;",
+            system: "Lead ακινήτου συλλέχθηκε · Agent ειδοποιήθηκε",
+            outcomes: ["Περισσότερα οργανωμένα leads", "Γρηγορότερη ανταπόκριση", "Λιγότερα χαμένα μηνύματα", "Καλύτερο follow-up"]
+          },
+          {
+            id: "localService",
+            icon: "wrench",
+            label: "Τοπική Επιχείρηση Υπηρεσιών",
+            shortDescription: "Άμεσες απαντήσεις, αιτήματα εργασιών και λιγότερα χαμένα leads.",
+            greeting:
+              "Γεια σας, μπορώ να απαντώ σε αιτήματα πελατών, να συλλέγω λεπτομέρειες εργασίας και να ειδοποιώ την ομάδα πριν χαθεί το lead.",
+            customer: "Χρειάζομαι προσφορά για επισκευή μέσα στην εβδομάδα.",
+            ai: "Μπορώ να συλλέξω την περιοχή, το είδος εργασίας και τα στοιχεία σας ώστε να επικοινωνήσει η ομάδα.",
+            system: "Αίτημα εργασίας συλλέχθηκε · Η ομάδα ειδοποιήθηκε",
+            outcomes: ["Λιγότερα χαμένα leads", "Πιο καθαρά αιτήματα", "Ταχύτερη ανταπόκριση", "Λιγότερη διαχείριση"]
+          },
+          {
+            id: "agency",
+            icon: "briefcase",
+            label: "Agency / Σύμβουλος",
+            shortDescription: "Αξιολόγηση prospects, εξήγηση υπηρεσιών και αιτήματα discovery call.",
+            greeting:
+              "Γεια σας, μπορώ να εξηγήσω υπηρεσίες, να αξιολογήσω prospects και να συλλέξω αιτήματα για discovery call.",
+            customer: "Θέλω να μάθω αν μπορείτε να βοηθήσετε την επιχείρησή μου.",
+            ai: "Μπορώ να συλλέξω τον κλάδο, τον στόχο σας και στοιχεία επικοινωνίας ώστε να οργανωθεί το επόμενο βήμα.",
+            system: "Prospect αξιολογήθηκε · Αίτημα call συλλέχθηκε",
+            outcomes: ["Καλύτερα qualified leads", "Πιο γρήγορα discovery calls", "Λιγότερα επαναλαμβανόμενα μηνύματα", "Οργανωμένο onboarding"]
+          }
+        ],
+        moduleLabels: { what: "Τι συμβαίνει", ai: "Τι κάνει το AI", gets: "Τι κερδίζει η επιχείρηση" },
+        modules: [
+          ["chatAgents", "message-square-text", "AI Chat Agents", "Άμεσες απαντήσεις στην ιστοσελίδα που συλλέγουν leads 24/7.", "Ο επισκέπτης ρωτά κάτι στην ιστοσελίδα.", "Απαντά άμεσα και συλλέγει στοιχεία επικοινωνίας.", "Qualified lead χωρίς χειροκίνητη απάντηση.", "AI Reply Sent", "Πιο γρήγορες απαντήσεις"],
+          ["voiceAssistants", "phone-call", "AI Voice Assistants", "Διαχείριση χαμένων κλήσεων και συλλογή στοιχείων καλούντος.", "Ο πελάτης καλεί εκτός ωραρίου ή δεν απαντά κανείς.", "Συλλέγει λόγο κλήσης και στοιχεία επικοινωνίας.", "Καμία χαμένη ευκαιρία.", "Missed Call Handled", "Λιγότερες χαμένες κλήσεις"],
+          ["websiteCreation", "monitor-cog", "Website Creation", "Ιστοσελίδες σχεδιασμένες για να μετατρέπουν επισκέπτες σε leads.", "Ο επισκέπτης μπαίνει στην ιστοσελίδα.", "Τον οδηγεί σε καθαρό CTA και συνομιλία.", "Περισσότεροι επισκέπτες γίνονται leads.", "Website Visitor Converted", "Καλύτερο conversion"],
+          ["leadCapture", "radar", "Automated Lead Capture", "Κάθε αίτημα αποθηκεύεται, οργανώνεται και στέλνεται στον ιδιοκτήτη.", "Υποβάλλεται νέο αίτημα.", "Δομεί τα στοιχεία και τα στέλνει σωστά.", "Οργανωμένο lead με πλήρες context.", "Lead Captured", "Λιγότερα χαμένα leads"],
+          ["reviewSystem", "star", "Google Review System", "Αυτόματα αιτήματα κριτικών μετά από επίσκεψη, κράτηση ή υπηρεσία.", "Ο πελάτης ολοκληρώνει επίσκεψη ή υπηρεσία.", "Στέλνει ευγενικό αίτημα κριτικής.", "Περισσότερες κριτικές με την πάροδο του χρόνου.", "Review Request Sent", "Καλύτερες κριτικές"],
+          ["supportAutomation", "headphones", "Customer Support Automation", "FAQ απαντήσεις, δρομολόγηση και ροές εξυπηρέτησης.", "Ο πελάτης κάνει συχνή ερώτηση.", "Απαντά ή δρομολογεί επείγον θέμα.", "Λιγότερη επαναλαμβανόμενη υποστήριξη.", "Support Request Routed", "Λιγότερη χειροκίνητη υποστήριξη"],
+          ["appointmentBooking", "calendar-check", "Appointment Booking", "Συλλογή αιτημάτων ραντεβού και άμεση ειδοποίηση ομάδας.", "Ο πελάτης ζητά διαθέσιμη ώρα.", "Συλλέγει ημερομηνία, ώρα, όνομα και τηλέφωνο.", "Δομημένο αίτημα ραντεβού στην ομάδα.", "Booking Request Captured", "Περισσότερα αιτήματα ραντεβού"],
+          ["followUp", "repeat-2", "Follow-Up Automation", "Υπενθυμίσεις, callbacks και next-step μηνύματα αυτόματα.", "Το lead έχει συλλεχθεί.", "Προγραμματίζει υπενθύμιση και επόμενο μήνυμα.", "Κανένα lead δεν μένει χωρίς συνέχεια.", "Follow-Up Ready", "Καλύτερο follow-up"]
+        ]
+      };
+    }
+
+    return {
+      industries: [
+        {
+          id: "clinic",
+          icon: "stethoscope",
+          label: "Clinic / Doctor",
+          shortDescription: "Capture appointment requests, answer FAQs and route urgent inquiries.",
+          greeting:
+            "Hi, I’m the AI assistant for {business}. I can answer common patient questions, capture appointment requests and notify the team instantly.",
+          customer: "I want to book an appointment for tomorrow.",
+          ai: "Sure. What time works best for you, and can I have your name and phone number?",
+          system: "Appointment request captured · Owner notified",
+          outcomes: ["Faster Replies", "Fewer Missed Leads", "More Booking Requests", "Less Manual Admin"]
+        },
+        {
+          id: "dental",
+          icon: "badge-plus",
+          label: "Dental Clinic",
+          shortDescription: "Handle appointment requests, patient FAQs and urgent inquiry routing.",
+          greeting:
+            "Hi, I’m the AI assistant for {business}. I can capture appointment requests, answer basic patient questions and route urgent issues to the team.",
+          customer: "I have tooth pain and need an available appointment.",
+          ai: "I can collect your details and preferred time so the dental team can follow up quickly.",
+          system: "Urgent request routed · Contact details requested",
+          outcomes: ["Faster Replies", "More Booking Requests", "Fewer Missed Calls", "Follow-Up Ready"]
+        },
+        {
+          id: "restaurant",
+          icon: "utensils",
+          label: "Restaurant",
+          shortDescription: "Handle reservation questions, opening hours, menu FAQs and follow-ups.",
+          greeting:
+            "Hi, I can help guests ask about availability, request reservations, check opening hours and send their details to the restaurant team.",
+          customer: "Do you have a table for 4 tonight?",
+          ai: "I can help with that. What time would you like to come, and what name should I put the request under?",
+          system: "Reservation request captured · Team notified",
+          outcomes: ["Faster Replies", "More Booking Requests", "Fewer Missed Messages", "Better Customer Experience"]
+        },
+        {
+          id: "hotel",
+          icon: "hotel",
+          label: "Hotel / Hospitality",
+          shortDescription: "Answer guest questions, capture booking interest and automate follow-ups.",
+          greeting:
+            "Hi, I can answer guest questions, capture booking interest and route requests to your team.",
+          customer: "Do you have a room available this weekend?",
+          ai: "I can collect your dates, number of guests and contact details so the team can follow up.",
+          system: "Booking interest captured · Follow-up ready",
+          outcomes: ["Faster Replies", "More Structured Requests", "Less Manual Admin", "24/7 Customer Support"]
+        },
+        {
+          id: "law",
+          icon: "scale",
+          label: "Law Firm",
+          shortDescription: "Qualify client inquiries, collect contact details and route cases.",
+          greeting:
+            "Hi, I can qualify new client inquiries, collect contact details and route urgent legal requests to the office. I do not provide legal advice.",
+          customer: "I need help with a contract issue.",
+          ai: "I can collect a few details and route this to the right person. Is this about employment, business, property or family law?",
+          system: "Inquiry qualified · Contact details requested",
+          outcomes: ["Fewer Missed Leads", "Better Inquiry Routing", "Faster Human Follow-Up", "More Organized Intake"]
+        },
+        {
+          id: "realEstate",
+          icon: "home",
+          label: "Real Estate Office",
+          shortDescription: "Capture buyer/renter leads, answer property FAQs and notify agents.",
+          greeting:
+            "Hi, I can help buyers and renters ask about properties, collect their contact details and notify your real estate team.",
+          customer: "I'm interested in the apartment downtown.",
+          ai: "Great. Are you looking to buy or rent, what is your budget, and what phone number should the agent use?",
+          system: "Property lead captured · Agent notified",
+          outcomes: ["More Structured Leads", "Faster Replies", "Fewer Missed Messages", "Better Follow-Up"]
+        },
+        {
+          id: "localService",
+          icon: "wrench",
+          label: "Local Service Business",
+          shortDescription: "Respond instantly, collect job requests and reduce missed leads.",
+          greeting:
+            "Hi, I can respond to customer inquiries, collect job details and notify your team before the lead goes cold.",
+          customer: "I need a quote for a repair this week.",
+          ai: "I can collect your location, job details and contact information so the team can respond with the next step.",
+          system: "Job request captured · Team notified",
+          outcomes: ["Fewer Missed Leads", "Clearer Job Requests", "Faster Replies", "Less Manual Admin"]
+        },
+        {
+          id: "agency",
+          icon: "briefcase",
+          label: "Agency / Consultant",
+          shortDescription: "Qualify prospects, explain services and capture discovery call requests.",
+          greeting:
+            "Hi, I can explain your services, qualify prospects and capture discovery call requests.",
+          customer: "I want to know if you can help my business.",
+          ai: "I can collect your industry, goal and contact details so the team can recommend the right next step.",
+          system: "Prospect qualified · Discovery call request captured",
+          outcomes: ["Better Qualified Leads", "Faster Discovery Calls", "Less Repetitive Messaging", "Cleaner Onboarding"]
+        }
+      ],
+      moduleLabels: { what: "What happens", ai: "What the AI does", gets: "What the business gets" },
+      modules: [
+        ["chatAgents", "message-square-text", "AI Chat Agents", "Instant website replies that answer questions and capture leads 24/7.", "Visitor asks a question on your website.", "Answers instantly and collects contact details.", "A qualified lead without manual reply.", "AI Reply Sent", "Faster Replies"],
+        ["voiceAssistants", "phone-call", "AI Voice Assistants", "Handle missed calls, collect caller details and route requests.", "Customer calls outside working hours or no one answers.", "Collects the reason for the call and contact details.", "No missed opportunity.", "Missed Call Handled", "Fewer Missed Calls"],
+        ["websiteCreation", "monitor-cog", "Website Creation", "Conversion-focused websites designed to turn visitors into leads.", "Visitor lands on your website.", "Guides them to a clear CTA and conversation.", "More visitors become leads.", "Website Visitor Converted", "Better Conversion"],
+        ["leadCapture", "radar", "Automated Lead Capture", "Every inquiry is saved, structured and sent to the business owner.", "Inquiry is submitted.", "Structures the data and sends it to the right place.", "A clean lead with full context.", "Lead Captured", "Fewer Missed Leads"],
+        ["reviewSystem", "star", "Google Review System", "Automated review requests after visits, bookings or completed services.", "Customer finishes a visit or service.", "Sends a polite review request.", "More Google reviews over time.", "Review Request Sent", "Better Reviews"],
+        ["supportAutomation", "headphones", "Customer Support Automation", "FAQ answers, request routing and customer service workflows.", "Customer asks an FAQ.", "Answers or routes urgent issues to your team.", "Less repetitive support work.", "Support Request Routed", "Less Manual Support"],
+        ["appointmentBooking", "calendar-check", "Appointment Booking", "Capture booking requests and notify the team instantly.", "Customer requests a time slot.", "Collects preferred date, time, name and phone.", "Structured booking request sent to the team.", "Booking Request Captured", "More Booking Requests"],
+        ["followUp", "repeat-2", "Follow-Up Automation", "Send reminders, callbacks and next-step messages automatically.", "Lead has been captured.", "Schedules a reminder and sends the next-step message.", "No lead is left without follow-up.", "Follow-Up Ready", "Better Follow-Up"]
+      ]
+    };
+  }
+
   function Hero({ lang }) {
     const c = content[lang];
     const heroRef = useRef(null);
@@ -931,7 +1306,6 @@
         h(
           motion.div,
           { className: "hero-copy-layer", style: copyMotion },
-          h("div", { className: "hero-kicker" }, c.heroKicker),
           h("h1", null, c.heroTitle),
           h("p", null, c.heroCopy),
           h(
@@ -1014,6 +1388,294 @@
                   h("p", null, service.copy)
                 )
               )
+            )
+          )
+        )
+      )
+    );
+  }
+
+  function InteractiveAIDemo({ lang }) {
+    const c = content[lang].interactiveDemo;
+    const shouldReduceMotion = useReducedMotion();
+    const data = useMemo(() => {
+      const demoData = getInteractiveDemoData(lang);
+      return {
+        ...demoData,
+        modules: demoData.modules.map(([id, icon, label, shortDescription, whatHappens, aiDoes, businessGets, flowStep, outcome]) => ({
+          id,
+          icon,
+          label,
+          shortDescription,
+          whatHappens,
+          aiDoes,
+          businessGets,
+          flowStep,
+          outcome
+        }))
+      };
+    }, [lang]);
+    const [selectedIndustryId, setSelectedIndustryId] = useState("clinic");
+    const [businessName, setBusinessName] = useState("");
+    const [selectedModuleIds, setSelectedModuleIds] = useState(["chatAgents", "appointmentBooking", "leadCapture"]);
+
+    const selectedIndustry = data.industries.find((industry) => industry.id === selectedIndustryId) || data.industries[0];
+    const moduleById = Object.fromEntries(data.modules.map((module) => [module.id, module]));
+    const selectedModules = selectedModuleIds.map((id) => moduleById[id]).filter(Boolean);
+    const hasSelectedModules = selectedModules.length > 0;
+    const displayBusiness = businessName.trim() || c.emptyBusiness;
+    const moduleNames = hasSelectedModules ? selectedModules.map((module) => module.label).join(", ") : c.noModulesSelected;
+    const flowSteps = hasSelectedModules
+      ? Array.from(new Set([c.baseFlow[0], ...selectedModules.map((module) => module.flowStep), c.baseFlow[4], c.baseFlow[5]])).slice(0, 8)
+      : c.baseFlow.slice(0, 4);
+    const outcomes = hasSelectedModules
+      ? Array.from(new Set([...selectedModules.map((module) => module.outcome), ...selectedIndustry.outcomes])).slice(0, 4)
+      : selectedIndustry.outcomes.slice(0, 4);
+    const statusMap =
+      lang === "el"
+        ? {
+            voiceAssistants: "VOICE AI ΕΝΕΡΓΟ",
+            websiteCreation: "WEBSITE FLOW ΕΝΕΡΓΟ",
+            reviewSystem: "ΚΡΙΤΙΚΕΣ ΕΤΟΙΜΕΣ",
+            appointmentBooking: "BOOKING FLOW ΕΝΕΡΓΟ"
+          }
+        : {
+            voiceAssistants: "VOICE AI ACTIVE",
+            websiteCreation: "WEBSITE FLOW ACTIVE",
+            reviewSystem: "REVIEW SYSTEM READY",
+            appointmentBooking: "BOOKING FLOW ACTIVE"
+          };
+    const liveStatuses = Array.from(new Set([...c.statusItems, ...selectedModuleIds.map((id) => statusMap[id]).filter(Boolean)])).slice(0, 6);
+
+    const toggleModule = (moduleId) => {
+      setSelectedModuleIds((current) => {
+        if (current.includes(moduleId)) {
+          return current.filter((id) => id !== moduleId);
+        }
+        return [...current, moduleId];
+      });
+    };
+
+    const buildSelectionPayload = () => ({
+      businessName: businessName.trim(),
+      industry: selectedIndustry.label,
+      automationGoal: formatText(c.contactSummary, { industry: selectedIndustry.label, modules: moduleNames })
+    });
+
+    const buildForBusiness = () => {
+      const payload = buildSelectionPayload();
+      try {
+        window.localStorage.setItem("nous-demo-selection", JSON.stringify(payload));
+      } catch (error) {
+        console.warn("[Nous Interactive Demo] Could not save demo selection", error);
+      }
+      window.dispatchEvent(new CustomEvent("nous:demo-selection", { detail: payload }));
+      document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    const talkToAssistant = () => {
+      const prompt = formatText(c.chatPrompt, { industry: selectedIndustry.label });
+      window.dispatchEvent(new CustomEvent("nous:open-chat", { detail: { prompt } }));
+    };
+
+    return h(
+      "section",
+      { className: "section interactive-demo-section", id: "ai-demo" },
+      h(
+        "div",
+        { className: "section-inner" },
+        h(SectionIntro, { eyebrow: c.eyebrow, title: c.title, copy: c.copy }),
+        h(
+          "div",
+          { className: "interactive-demo-layout" },
+          h(
+            motion.div,
+            { className: "demo-control-panel", ...reveal(0.05) },
+            h(
+              "div",
+              { className: "demo-control-block" },
+              h("div", { className: "demo-control-label" }, c.businessTypeLabel),
+              h(
+                "div",
+                { className: "business-type-grid" },
+                data.industries.map((industry, index) =>
+                  h(
+                    motion.button,
+                    {
+                      className: `business-type-card${industry.id === selectedIndustryId ? " active" : ""}`,
+                      key: industry.id,
+                      type: "button",
+                      onClick: () => setSelectedIndustryId(industry.id),
+                      "aria-pressed": industry.id === selectedIndustryId,
+                      whileHover: shouldReduceMotion ? undefined : { y: -4 },
+                      whileTap: { scale: 0.98 },
+                      transition: { duration: 0.2, delay: index * 0.01 }
+                    },
+                    h("span", { className: "business-type-icon" }, h(Icon, { name: industry.icon })),
+                    h("strong", null, industry.label),
+                    h("small", null, industry.shortDescription)
+                  )
+                )
+              )
+            ),
+            h(
+              "div",
+              { className: "demo-control-block" },
+              h("label", { className: "demo-control-label", htmlFor: "interactive-business-name" }, c.businessNameLabel),
+              h("input", {
+                className: "input-field demo-business-input",
+                id: "interactive-business-name",
+                type: "text",
+                value: businessName,
+                onChange: (event) => setBusinessName(event.target.value),
+                placeholder: c.businessNamePlaceholder,
+                autoComplete: "organization"
+              })
+            ),
+            h(
+              "div",
+              { className: "demo-control-block" },
+              h(
+                "div",
+                { className: "demo-module-header" },
+                h("div", { className: "demo-control-label" }, c.modulesLabel),
+                h("span", null, formatText(c.selectedModulesLabel, { count: String(selectedModules.length) }))
+              ),
+              h(
+                "div",
+                { className: "module-selector-grid" },
+                data.modules.map((module) => {
+                  const isSelected = selectedModuleIds.includes(module.id);
+                  return h(
+                    motion.button,
+                    {
+                      className: `module-select-card${isSelected ? " active" : ""}`,
+                      key: module.id,
+                      type: "button",
+                      onClick: () => toggleModule(module.id),
+                      "aria-pressed": isSelected,
+                      whileHover: shouldReduceMotion ? undefined : { y: -3 },
+                      whileTap: { scale: 0.98 }
+                    },
+                    h("span", { className: "module-select-icon" }, h(Icon, { name: module.icon })),
+                    h("span", null, h("strong", null, module.label), h("small", null, module.shortDescription)),
+                    h("span", { className: "module-check", "aria-hidden": "true" })
+                  );
+                })
+              )
+            )
+          ),
+          h(
+            motion.div,
+            { className: "demo-preview-panel", ...reveal(0.1) },
+            h("div", { className: "demo-preview-glow", "aria-hidden": "true" }),
+            h(
+              "div",
+              { className: "demo-preview-statusbar" },
+              h("span", null, c.previewLabel),
+              h("strong", null, c.liveSimulation)
+            ),
+            h(
+              "div",
+              { className: "demo-preview-header" },
+              h(
+                "div",
+                null,
+                h("span", { className: "demo-preview-kicker" }, c.previewStatus),
+                h("h3", null, formatText(c.previewTitle, { business: displayBusiness })),
+                h("p", null, formatText(c.previewSubtitle, { industry: selectedIndustry.label }))
+              ),
+              h("div", { className: "demo-preview-orb", "aria-hidden": "true" }, h("span", null))
+            ),
+            h(
+              AnimatePresence,
+              { mode: "wait" },
+              h(
+                motion.div,
+                {
+                  className: "assistant-simulation",
+                  key: `${selectedIndustry.id}-${displayBusiness}`,
+                  initial: shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10 },
+                  animate: { opacity: 1, y: 0 },
+                  exit: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 },
+                  transition: { duration: 0.24 }
+                },
+                h("div", { className: "assistant-message-preview" }, h("span", null, "AI"), h("p", null, formatText(selectedIndustry.greeting, { business: displayBusiness }))),
+                h(
+                  "div",
+                  { className: "conversation-preview" },
+                  h("div", { className: "conversation-row customer" }, h("strong", null, c.customerLabel), h("p", null, selectedIndustry.customer)),
+                  h("div", { className: "conversation-row ai" }, h("strong", null, c.aiLabel), h("p", null, selectedIndustry.ai)),
+                  h("div", { className: "conversation-row system" }, h("strong", null, c.systemLabel), h("p", null, selectedIndustry.system))
+                )
+              )
+            ),
+            h(
+              "div",
+              { className: "live-status-strip" },
+              liveStatuses.map((status) => h("span", { key: status }, h("i", null), status))
+            ),
+            h(
+              "div",
+              { className: "automation-flow-card" },
+              h("div", { className: "demo-subhead" }, c.flowLabel),
+              h(
+                "div",
+                { className: "automation-flow" },
+                flowSteps.map((step, index) =>
+                  h(
+                    motion.div,
+                    {
+                      className: "flow-node",
+                      key: `${step}-${index}`,
+                      initial: shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 8 },
+                      whileInView: { opacity: 1, y: 0 },
+                      viewport: { once: true, amount: 0.4 },
+                      transition: { duration: 0.35, delay: index * 0.05 }
+                    },
+                    h("span", null, String(index + 1).padStart(2, "0")),
+                    h("p", null, step)
+                  )
+                )
+              )
+            ),
+            h(
+              "div",
+              { className: "module-breakdown" },
+              h("div", { className: "demo-subhead" }, c.moduleBreakdownLabel),
+              hasSelectedModules
+                ? h(
+                    "div",
+                    { className: "module-breakdown-grid" },
+                    selectedModules.map((module) =>
+                      h(
+                        "article",
+                        { className: "module-breakdown-card", key: module.id },
+                        h("h4", null, h(Icon, { name: module.icon }), module.label),
+                        h("p", null, h("strong", null, data.moduleLabels.what), module.whatHappens),
+                        h("p", null, h("strong", null, data.moduleLabels.ai), module.aiDoes),
+                        h("p", null, h("strong", null, data.moduleLabels.gets), module.businessGets)
+                      )
+                    )
+                  )
+                : h(
+                    "div",
+                    { className: "module-empty-state" },
+                    h("strong", null, c.noModulesSelected),
+                    h("p", null, c.noModulesHint)
+                  )
+            ),
+            h(
+              "div",
+              { className: "outcome-preview-grid" },
+              h("div", { className: "demo-subhead" }, c.resultLabel),
+              outcomes.map((outcome) => h("div", { className: "outcome-preview-card", key: outcome }, h(Icon, { name: "check-circle-2" }), h("span", null, outcome)))
+            ),
+            h(
+              "div",
+              { className: "interactive-demo-actions" },
+              h(motion.button, { className: "btn btn-primary", type: "button", onClick: buildForBusiness, whileTap: { scale: 0.98 } }, c.primaryCta, h(Icon, { name: "arrow-down-right" })),
+              h(motion.button, { className: "btn btn-ghost", type: "button", onClick: talkToAssistant, whileTap: { scale: 0.98 } }, c.secondaryCta, h(Icon, { name: "message-circle" }))
             )
           )
         )
@@ -1211,6 +1873,188 @@
     );
   }
 
+  function Testimonials({ lang }) {
+    const c = content[lang];
+    const shouldReduceMotion = useReducedMotion();
+    const emptyForm = { name: "", role: "", quote: "" };
+    const storageKey = "nous-systems-ai-testimonials";
+    const [formData, setFormData] = useState(emptyForm);
+    const [visitorTestimonials, setVisitorTestimonials] = useState([]);
+    const [submission, setSubmission] = useState({ state: "idle", message: "" });
+
+    useEffect(() => {
+      try {
+        const stored = window.localStorage.getItem(storageKey);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setVisitorTestimonials(parsed.slice(0, 6));
+        }
+      } catch (error) {
+        console.warn("[Nous Testimonials] Could not load saved testimonials", error);
+      }
+    }, []);
+
+    useEffect(() => {
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(visitorTestimonials.slice(0, 6)));
+      } catch (error) {
+        console.warn("[Nous Testimonials] Could not save testimonials", error);
+      }
+    }, [visitorTestimonials]);
+
+    const updateField = (field) => (event) => {
+      setFormData((current) => ({ ...current, [field]: event.target.value }));
+    };
+
+    const initials = (name) =>
+      name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+
+    const submitTestimonial = async (event) => {
+      event.preventDefault();
+
+      const testimonial = {
+        name: formData.name.trim(),
+        role: formData.role.trim() || c.testimonialForm.defaultRole,
+        quote: formData.quote.trim(),
+        createdAt: new Date().toISOString()
+      };
+
+      if (!testimonial.name || !testimonial.quote) {
+        setSubmission({ state: "error", message: c.testimonialForm.error });
+        return;
+      }
+
+      setSubmission({ state: "loading", message: "" });
+      setVisitorTestimonials((current) => [{ ...testimonial, visitor: true }, ...current].slice(0, 6));
+      setFormData(emptyForm);
+
+      const testimonialWebhookUrl = ((window.NOUS_CONFIG && window.NOUS_CONFIG.MAKE_TESTIMONIAL_WEBHOOK_URL) || "").trim();
+
+      if (testimonialWebhookUrl) {
+        try {
+          const response = await fetch(testimonialWebhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...testimonial,
+              source: "nous-systems-ai-testimonial-form",
+              pageUrl: window.location.href,
+              language: lang
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Webhook failed with status ${response.status}`);
+          }
+        } catch (error) {
+          console.warn("[Nous Testimonials] Optional webhook failed", error);
+          setSubmission({ state: "success", message: c.testimonialForm.optionalWebhookError });
+          return;
+        }
+      }
+
+      setSubmission({ state: "success", message: c.testimonialForm.success });
+    };
+
+    const visibleTestimonials = [...visitorTestimonials, ...c.testimonials].slice(0, 6);
+
+    return h(
+      "section",
+      { className: "section testimonials-section", id: "testimonials" },
+      h(
+        "div",
+        { className: "section-inner" },
+        h(SectionIntro, { eyebrow: c.testimonialsEyebrow, title: c.testimonialsTitle, copy: c.testimonialsCopy }),
+        h(
+          "div",
+          { className: "testimonials-layout" },
+          h(
+            "div",
+            { className: "testimonials-grid" },
+            visibleTestimonials.map((testimonial, index) =>
+              h(
+                motion.article,
+                {
+                  className: `testimonial-card${testimonial.visitor ? " visitor-testimonial" : ""}`,
+                  key: `${testimonial.name}-${index}`,
+                  ...reveal(index * 0.04),
+                  whileHover: shouldReduceMotion ? undefined : { y: -6, rotateX: 1.5, rotateY: index % 2 === 0 ? -1 : 1 }
+                },
+                h(
+                  "div",
+                  { className: "testimonial-rating", "aria-label": "5 out of 5" },
+                  Array.from({ length: 5 }).map((_, starIndex) => h("span", { key: starIndex }))
+                ),
+                h("blockquote", null, testimonial.quote),
+                h(
+                  "div",
+                  { className: "testimonial-author" },
+                  h("span", { className: "testimonial-avatar", "aria-hidden": "true" }, initials(testimonial.name)),
+                  h("div", null, h("strong", null, testimonial.name), h("small", null, testimonial.role))
+                ),
+                testimonial.visitor && h("span", { className: "testimonial-badge" }, c.testimonialForm.pendingReview)
+              )
+            )
+          ),
+          h(
+            motion.aside,
+            { className: "testimonial-form-panel", ...reveal(0.12) },
+            h("div", { className: "testimonial-panel-glow", "aria-hidden": "true" }),
+            h("p", { className: "eyebrow" }, c.testimonialForm.title),
+            h("h3", null, c.testimonialForm.copy),
+            h(
+              "form",
+              { className: "testimonial-form", onSubmit: submitTestimonial },
+              h("input", {
+                className: "input-field",
+                name: "testimonialName",
+                value: formData.name,
+                onChange: updateField("name"),
+                placeholder: c.testimonialForm.name,
+                autoComplete: "name"
+              }),
+              h("input", {
+                className: "input-field",
+                name: "testimonialRole",
+                value: formData.role,
+                onChange: updateField("role"),
+                placeholder: c.testimonialForm.role,
+                autoComplete: "organization-title"
+              }),
+              h("textarea", {
+                className: "input-field",
+                name: "testimonialQuote",
+                value: formData.quote,
+                onChange: updateField("quote"),
+                placeholder: c.testimonialForm.quote,
+                rows: 5
+              }),
+              h(
+                "div",
+                { className: "testimonial-submit-row" },
+                h(
+                  "button",
+                  { className: "btn btn-primary", type: "submit", disabled: submission.state === "loading" },
+                  submission.state === "loading" ? c.testimonialForm.loading : c.testimonialForm.submit,
+                  h(Icon, { name: submission.state === "loading" ? "loader-2" : "send" })
+                )
+              ),
+              submission.message &&
+                h("div", { className: `form-status ${submission.state === "error" ? "error" : "success"}`, role: "status" }, submission.message)
+            )
+          )
+        )
+      )
+    );
+  }
+
   function DemoCta({ lang }) {
     const c = content[lang];
 
@@ -1264,6 +2108,32 @@
     const [formData, setFormData] = useState(initialForm);
     const [submission, setSubmission] = useState({ state: "idle", message: "" });
     const isSubmitting = submission.state === "loading";
+
+    const applyDemoSelection = (selection) => {
+      if (!selection || typeof selection !== "object") return;
+      setFormData((current) => ({
+        ...current,
+        businessName: selection.businessName || current.businessName,
+        industry: selection.industry || current.industry,
+        automationGoal: selection.automationGoal || current.automationGoal
+      }));
+      if (submission.state !== "idle") {
+        setSubmission({ state: "idle", message: "" });
+      }
+    };
+
+    useEffect(() => {
+      try {
+        const stored = window.localStorage.getItem("nous-demo-selection");
+        if (stored) applyDemoSelection(JSON.parse(stored));
+      } catch (error) {
+        console.warn("[Nous Contact] Could not read demo selection", error);
+      }
+
+      const handleDemoSelection = (event) => applyDemoSelection(event.detail);
+      window.addEventListener("nous:demo-selection", handleDemoSelection);
+      return () => window.removeEventListener("nous:demo-selection", handleDemoSelection);
+    }, []);
 
     const updateField = (field) => (event) => {
       setFormData((current) => ({ ...current, [field]: event.target.value }));
@@ -1434,12 +2304,26 @@
     );
   }
 
+  function AssistantOrb({ variant = "panel", label = "AI" }) {
+    return h(
+      "span",
+      { className: `assistant-orb assistant-orb-${variant}`, "aria-hidden": "true" },
+      h("span", { className: "assistant-orb-core" }),
+      h("span", { className: "assistant-orb-ring ring-a" }),
+      h("span", { className: "assistant-orb-ring ring-b" }),
+      h("span", { className: "assistant-orb-node node-a" }),
+      h("span", { className: "assistant-orb-node node-b" }),
+      h("strong", null, label)
+    );
+  }
+
   function ChatAssistantWidget({ lang }) {
     const c = content[lang].assistant;
     const createMessage = (from, text) => ({ from, text, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
     const [typing, setTyping] = useState(false);
+    const [thinkingStep, setThinkingStep] = useState(0);
     const [messages, setMessages] = useState([createMessage("assistant", c.intro)]);
     const endRef = useRef(null);
 
@@ -1450,8 +2334,33 @@
     }, [lang]);
 
     useEffect(() => {
+      const handleOpenChat = (event) => {
+        setOpen(true);
+        if (event.detail?.prompt) {
+          setInput(event.detail.prompt);
+        }
+      };
+      window.addEventListener("nous:open-chat", handleOpenChat);
+      return () => window.removeEventListener("nous:open-chat", handleOpenChat);
+    }, []);
+
+    useEffect(() => {
       endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, [messages, typing, open]);
+
+    useEffect(() => {
+      if (!typing) {
+        setThinkingStep(0);
+        return undefined;
+      }
+
+      const interval = window.setInterval(() => {
+        const steps = c.typingSteps || [c.typing];
+        setThinkingStep((current) => Math.min(current + 1, steps.length - 1));
+      }, 900);
+
+      return () => window.clearInterval(interval);
+    }, [typing, lang]);
 
     const systemPrompt = `You are the AI business assistant for Nous Systems AI, an AI automation agency in Greece.
 Speak in the user's language when possible.
@@ -1618,20 +2527,20 @@ Keep answers under 120 words unless the user asks for detail.`;
             h(
               "div",
               { className: "chat-panel-header" },
-              h(
-                "div",
-                { className: "chat-avatar", "aria-hidden": "true" },
-                h("span", { className: "chat-avatar-orb" }),
-                h("strong", null, "AI")
-              ),
+              h(AssistantOrb, { variant: "panel" }),
               h(
                 "div",
                 { className: "chat-panel-title" },
                 h("strong", null, c.title),
                 h("span", null, c.subtitle),
-                h("div", { className: "chat-status-row" }, h("i", null), h("span", null, c.status))
+                h("div", { className: "chat-status-row" }, h("i", null), h("em", null, "AI ONLINE"), h("span", null, c.status))
               ),
               h("button", { className: "chat-close", type: "button", onClick: () => setOpen(false), "aria-label": c.close }, "×")
+            ),
+            h(
+              "div",
+              { className: "chat-live-status", "aria-label": c.status },
+              (c.liveStatus || []).map((status) => h("span", { key: status }, h("i", null), status))
             ),
             h(
               "div",
@@ -1646,7 +2555,7 @@ Keep answers under 120 words unless the user asks for detail.`;
                     animate: { opacity: 1, y: 0 },
                     transition: { duration: 0.22 }
                   },
-                  message.from === "assistant" && h("div", { className: "message-avatar" }, h("span", null, "AI")),
+                  message.from === "assistant" && h(AssistantOrb, { variant: "mini" }),
                   h(
                     "div",
                     { className: "message-stack" },
@@ -1659,11 +2568,14 @@ Keep answers under 120 words unless the user asks for detail.`;
                 h(
                   "div",
                   { className: "chat-typing-indicator" },
-                  h("div", { className: "typing-skeleton" }),
-                  h("span", null),
-                  h("span", null),
-                  h("span", null),
-                  h("div", null, c.typing)
+                  h(AssistantOrb, { variant: "typing" }),
+                  h(
+                    "div",
+                    { className: "typing-copy" },
+                    h("strong", null, (c.typingSteps || [c.typing])[thinkingStep] || c.typing),
+                    h("div", { className: "typing-wave" }, h("span", null), h("span", null), h("span", null), h("span", null))
+                  ),
+                  h("div", { className: "typing-dots" }, h("span", null), h("span", null), h("span", null))
                 ),
               h("div", { ref: endRef })
             ),
@@ -1697,7 +2609,14 @@ Keep answers under 120 words unless the user asks for detail.`;
                     whileTap: typing || !input.trim() ? undefined : { scale: 0.96 },
                     "aria-label": c.sendLabel
                   },
-                  h(Icon, { name: typing ? "loader-circle" : "send" })
+                  typing
+                    ? h(Icon, { name: "loader-circle" })
+                    : h(
+                        "svg",
+                        { className: "chat-send-arrow", viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },
+                        h("path", { d: "M5 12h13" }),
+                        h("path", { d: "m13 6 6 6-6 6" })
+                      )
                 )
               ),
               h(
@@ -1724,8 +2643,8 @@ Keep answers under 120 words unless the user asks for detail.`;
       h(
         motion.button,
         { className: "chat-toggle", type: "button", onClick: () => setOpen((current) => !current), whileTap: { scale: 0.96 }, "aria-label": c.button },
-        h("span", null, open ? c.close : c.button),
-        h(Icon, { name: "message-circle" })
+        h(AssistantOrb, { variant: "toggle" }),
+        h("span", { className: "chat-toggle-label" }, open ? c.close : c.button)
       )
     );
   }
@@ -1792,11 +2711,13 @@ Keep answers under 120 words unless the user asks for detail.`;
             null,
             h(Hero, { lang }),
             h(Services, { lang }),
+            h(InteractiveAIDemo, { lang }),
             h(Industries, { lang }),
             h(BeforeAfter, { lang }),
             h(Handles, { lang }),
             h(HowItWorks, { lang }),
             h(WhyChooseUs, { lang }),
+            h(Testimonials, { lang }),
             h(DemoCta, { lang }),
             h(Faq, { lang }),
             h(Contact, { lang })
