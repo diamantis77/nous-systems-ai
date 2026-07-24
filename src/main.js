@@ -56,6 +56,9 @@
     let lenis = null;
     let scrollLockCount = 0;
     let resizeRaf = 0;
+    let lastScrollCss = -1;
+    let lastPointerCssX = -1;
+    let lastPointerCssY = -1;
 
     const reduceMotionQuery = () =>
       window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -86,7 +89,11 @@
     const updateScrollState = () => {
       state.scrollY = lenis && typeof lenis.scroll === "number" ? lenis.scroll : window.scrollY || window.pageYOffset || 0;
       state.scrollProgress = clamp(state.scrollY / getScrollLimit());
-      document.documentElement.style.setProperty("--scroll", `${Math.round(state.scrollY)}`);
+      const roundedScroll = Math.round(state.scrollY);
+      if (Math.abs(roundedScroll - lastScrollCss) > 1) {
+        lastScrollCss = roundedScroll;
+        document.documentElement.style.setProperty("--scroll", `${roundedScroll}`);
+      }
     };
 
     const updatePointerState = (delta) => {
@@ -94,8 +101,12 @@
       state.pointer.y = damp(state.pointer.y, state.pointerTarget.y, 5.4, delta);
       state.pointer.px = damp(state.pointer.px, state.pointerTarget.px, 6.2, delta);
       state.pointer.py = damp(state.pointer.py, state.pointerTarget.py, 6.2, delta);
-      document.documentElement.style.setProperty("--mx", `${state.pointer.px}px`);
-      document.documentElement.style.setProperty("--my", `${state.pointer.py}px`);
+      if (Math.abs(state.pointer.px - lastPointerCssX) > 0.75 || Math.abs(state.pointer.py - lastPointerCssY) > 0.75) {
+        lastPointerCssX = state.pointer.px;
+        lastPointerCssY = state.pointer.py;
+        document.documentElement.style.setProperty("--mx", `${state.pointer.px}px`);
+        document.documentElement.style.setProperty("--my", `${state.pointer.py}px`);
+      }
     };
 
     const onPointer = (event) => {
@@ -175,8 +186,8 @@
       updateScrollState();
       if (window.Lenis && !state.reduceMotion) {
         lenis = new window.Lenis({
-          smoothWheel: true,
-          lerp: 0.075,
+          smoothWheel: false,
+          lerp: 0.08,
           wheelMultiplier: 0.9,
           touchMultiplier: 1.05,
           syncTouch: false
@@ -1104,7 +1115,7 @@
       mount.appendChild(renderer.domElement);
       scene.add(mainGroup);
 
-      const particleCount = isLowPowerDevice ? 70 : 150;
+      const particleCount = isLowPowerDevice ? 42 : 92;
       const particleGeometry = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
       const speeds = new Float32Array(particleCount);
@@ -1184,7 +1195,7 @@
       sceneObserver?.observe(heroNode);
 
       const renderFrame = (time = 0, delta = 1 / 60, runtimeState = motionRuntime.state) => {
-        const targetFrameMs = isLowPowerDevice ? 50 : 34;
+        const targetFrameMs = isLowPowerDevice ? 72 : 50;
         if (time - lastFrame < targetFrameMs || document.hidden || !sceneVisible) {
           return;
         }
@@ -1300,7 +1311,7 @@
       const randomColor = (alpha = 0.72) => `${palette[Math.floor(Math.random() * palette.length)]}${alpha})`;
 
       const addSplat = (x, y, force = 1, count = 8) => {
-        const amount = Math.min(isPerformanceMode() ? 4 : 7, Math.max(2, Math.round(count * force)));
+        const amount = Math.min(isPerformanceMode() ? 3 : 5, Math.max(2, Math.round(count * force)));
         for (let index = 0; index < amount; index += 1) {
           const angle = Math.random() * Math.PI * 2;
           const speed = (0.18 + Math.random() * 0.72) * force;
@@ -1318,12 +1329,12 @@
             angle
           });
         }
-        const maxSplats = isPerformanceMode() ? 56 : 110;
+        const maxSplats = isPerformanceMode() ? 34 : 64;
         if (splats.length > maxSplats) splats.splice(0, splats.length - maxSplats);
       };
 
       const loadBurst = () => {
-        const burstCount = isPerformanceMode() ? 8 : 16;
+        const burstCount = isPerformanceMode() ? 5 : 10;
         for (let index = 0; index < burstCount; index += 1) {
           addSplat(Math.random() * width, Math.random() * height, 0.62 + Math.random() * 0.88, 2);
         }
@@ -1364,7 +1375,7 @@
       };
 
       const render = (time) => {
-        const targetFrameMs = isPerformanceMode() ? 50 : 34;
+        const targetFrameMs = isPerformanceMode() ? 84 : 58;
         if (time - lastFrame < targetFrameMs) {
           return;
         }
@@ -1383,13 +1394,13 @@
           const radius = baseRadius * (0.72 + 0.28 * Math.sin(orbitAngle * 0.37));
           const x = width * 0.5 + Math.cos(orbitAngle) * radius;
           const y = height * 0.47 + Math.sin(orbitAngle) * radius;
-          if (Math.round(orbitAngle * 100) % (isPerformanceMode() ? 10 : 6) === 0) addSplat(x, y, isPerformanceMode() ? 0.3 : 0.42, 1);
+          if (Math.round(orbitAngle * 100) % (isPerformanceMode() ? 16 : 10) === 0) addSplat(x, y, isPerformanceMode() ? 0.24 : 0.34, 1);
         }
 
         if (queuedWaves > 0 && time - lastWave > 160 && !reduceMotion) {
           queuedWaves -= 1;
           lastWave = time;
-          addSplat(width * (0.18 + Math.random() * 0.64), height * (0.18 + Math.random() * 0.64), isPerformanceMode() ? 0.55 : 0.82, 4);
+          addSplat(width * (0.18 + Math.random() * 0.64), height * (0.18 + Math.random() * 0.64), isPerformanceMode() ? 0.42 : 0.62, 3);
         }
 
         context.globalCompositeOperation = "lighter";
@@ -1413,6 +1424,7 @@
       };
 
       const handlePointer = (event) => {
+        if (!motionRuntime.state.canUsePointerParallax || isPerformanceMode()) return;
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
