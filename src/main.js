@@ -56,7 +56,6 @@
     let lenis = null;
     let scrollLockCount = 0;
     let resizeRaf = 0;
-    let lastScrollCss = -1;
     let lastPointerCssX = -1;
     let lastPointerCssY = -1;
 
@@ -89,11 +88,6 @@
     const updateScrollState = () => {
       state.scrollY = lenis && typeof lenis.scroll === "number" ? lenis.scroll : window.scrollY || window.pageYOffset || 0;
       state.scrollProgress = clamp(state.scrollY / getScrollLimit());
-      const roundedScroll = Math.round(state.scrollY);
-      if (Math.abs(roundedScroll - lastScrollCss) > 1) {
-        lastScrollCss = roundedScroll;
-        document.documentElement.style.setProperty("--scroll", `${roundedScroll}`);
-      }
     };
 
     const updatePointerState = (delta) => {
@@ -115,6 +109,16 @@
       state.pointerTarget.py = event.clientY;
       state.pointerTarget.x = (event.clientX / Math.max(window.innerWidth, 1)) * 2 - 1;
       state.pointerTarget.y = -((event.clientY / Math.max(window.innerHeight, 1)) * 2 - 1);
+      state.pointer.px = state.pointerTarget.px;
+      state.pointer.py = state.pointerTarget.py;
+      state.pointer.x = state.pointerTarget.x;
+      state.pointer.y = state.pointerTarget.y;
+      if (Math.abs(event.clientX - lastPointerCssX) > 2 || Math.abs(event.clientY - lastPointerCssY) > 2) {
+        lastPointerCssX = event.clientX;
+        lastPointerCssY = event.clientY;
+        document.documentElement.style.setProperty("--mx", `${event.clientX}px`);
+        document.documentElement.style.setProperty("--my", `${event.clientY}px`);
+      }
     };
 
     const onResize = () => {
@@ -165,7 +169,6 @@
     };
 
     const frame = (time) => {
-      rafId = requestAnimationFrame(frame);
       if (!previousTime) previousTime = time;
       const delta = Math.min((time - previousTime) / 1000, 0.05) || 1 / 60;
       previousTime = time;
@@ -177,6 +180,17 @@
       updatePointerState(delta);
       if (state.hidden) return;
       callbacks.forEach((callback) => callback(time, delta, state));
+      if (initialized && (callbacks.size > 0 || (lenis && lenis.isAnimating))) {
+        rafId = requestAnimationFrame(frame);
+      } else {
+        rafId = 0;
+      }
+    };
+
+    const ensureFrame = () => {
+      if (rafId) return;
+      previousTime = performance.now();
+      rafId = requestAnimationFrame(frame);
     };
 
     const init = () => {
@@ -184,20 +198,10 @@
       initialized = true;
       updatePreferences();
       updateScrollState();
-      if (window.Lenis && !state.reduceMotion) {
-        lenis = new window.Lenis({
-          smoothWheel: false,
-          lerp: 0.08,
-          wheelMultiplier: 0.9,
-          touchMultiplier: 1.05,
-          syncTouch: false
-        });
-      }
       window.addEventListener("pointermove", onPointer, { passive: true });
       window.addEventListener("resize", onResize, { passive: true });
       document.addEventListener("visibilitychange", onVisibility);
       document.addEventListener("click", onAnchorClick);
-      rafId = requestAnimationFrame(frame);
     };
 
     const destroy = () => {
@@ -226,7 +230,14 @@
       addFrameCallback(callback) {
         init();
         callbacks.add(callback);
-        return () => callbacks.delete(callback);
+        ensureFrame();
+        return () => {
+          callbacks.delete(callback);
+          if (callbacks.size === 0 && rafId && !(lenis && lenis.isAnimating)) {
+            cancelAnimationFrame(rafId);
+            rafId = 0;
+          }
+        };
       },
       scrollTo,
       getSectionProgress,
@@ -2247,7 +2258,7 @@
     return h(
       "section",
       { className: "hero cinematic-hero", id: "top", ref: heroRef },
-      h(FluidInkCanvas),
+      h("div", { className: "hero-static-aurora-field", "aria-hidden": "true" }),
       h("div", { className: "hero-fluid-scrim", "aria-hidden": "true" }),
       h(motion.div, {
         className: "hero-scroll-aurora",
@@ -4282,7 +4293,7 @@ Keep answers under 120 words unless the user asks for detail.`;
       return h(
         "div",
         { className: "client-page client-page-empty" },
-        h(ThreeScene),
+        h("div", { className: "static-depth-layer", "aria-hidden": "true" }),
         h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
         h("main", { className: "client-empty-card" }, h(BrandLogoMark), h("h1", null, notFound.title), h("p", null, notFound.copy), h("a", { className: "btn btn-primary", href: window.location.pathname || "/" }, notFound.back))
       );
@@ -4324,7 +4335,7 @@ Keep answers under 120 words unless the user asks for detail.`;
     return h(
       "div",
       { className: "client-page" },
-      h(ThreeScene),
+      h("div", { className: "static-depth-layer", "aria-hidden": "true" }),
       h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
       h(
         "header",
@@ -4413,7 +4424,7 @@ Keep answers under 120 words unless the user asks for detail.`;
     return h(
       "div",
       { className: "admin-page" },
-      h(ThreeScene),
+      h("div", { className: "static-depth-layer", "aria-hidden": "true" }),
       h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
       h(
         "main",
@@ -4553,7 +4564,7 @@ Keep answers under 120 words unless the user asks for detail.`;
         h(
           "div",
           { className: "app-shell" },
-          h(ThreeScene),
+          h("div", { className: "static-depth-layer", "aria-hidden": "true" }),
           h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
           h("div", { className: "scanline", "aria-hidden": "true" }),
           h(Loader, { loaded }),

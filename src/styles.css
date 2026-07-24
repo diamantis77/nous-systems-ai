@@ -69,10 +69,10 @@ body::before {
       transparent 1px 88px
     );
   background-position:
-    calc(var(--scroll) * -0.02px) calc(var(--scroll) * 0.04px),
-    calc(var(--scroll) * 0.03px) calc(var(--scroll) * -0.02px),
-    center calc(var(--scroll) * -0.1px),
-    center calc(var(--scroll) * -0.1px);
+    center top,
+    center top,
+    center top,
+    center top;
   mask-image: linear-gradient(to bottom, black, rgba(0, 0, 0, 0.82), transparent 92%);
 }
 
@@ -137,6 +137,21 @@ img {
 
 .no-webgl .three-layer {
   display: none;
+}
+
+.static-depth-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  opacity: 0.62;
+  background:
+    radial-gradient(ellipse at 78% 18%, rgba(30, 167, 255, 0.16), transparent 34%),
+    radial-gradient(ellipse at 18% 30%, rgba(101, 234, 255, 0.1), transparent 32%),
+    linear-gradient(120deg, transparent 0 38%, rgba(30, 167, 255, 0.045) 49%, transparent 64%),
+    repeating-linear-gradient(90deg, rgba(101, 234, 255, 0.035) 0 1px, transparent 1px 110px),
+    repeating-linear-gradient(0deg, rgba(101, 234, 255, 0.03) 0 1px, transparent 1px 110px);
+  mask-image: linear-gradient(to bottom, black, rgba(0, 0, 0, 0.72), transparent 92%);
 }
 
 .cinema-vignette {
@@ -783,6 +798,19 @@ img {
   pointer-events: none;
   opacity: 0.78;
   contain: layout paint style;
+}
+
+.hero-static-aurora-field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.82;
+  background:
+    radial-gradient(ellipse at 50% 32%, rgba(101, 234, 255, 0.2), transparent 42%),
+    radial-gradient(ellipse at 28% 58%, rgba(30, 167, 255, 0.12), transparent 34%),
+    radial-gradient(ellipse at 74% 52%, rgba(84, 119, 255, 0.1), transparent 36%),
+    linear-gradient(180deg, rgba(5, 8, 22, 0.08), rgba(5, 8, 22, 0.74));
 }
 
 .hero-fluid-scrim {
