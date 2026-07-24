@@ -14,6 +14,230 @@
   const animatedLogoPath = "/nous-logo-animated.mp4";
   const smoothEase = [0.22, 1, 0.36, 1];
 
+  const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+  const lerp = (from, to, amount) => from + (to - from) * amount;
+  const damp = (current, target, smoothing, delta = 1 / 60) =>
+    lerp(current, target, 1 - Math.exp(-smoothing * delta));
+  const smoothstep = (min, max, value) => {
+    const progress = clamp((value - min) / (max - min));
+    return progress * progress * (3 - 2 * progress);
+  };
+  const easeInOutCubic = (progress) =>
+    progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+  const getSectionProgress = (element, start = 0.9, end = 0.1) => {
+    if (!element) return 0;
+    const rect = element.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || 1;
+    const distance = viewportHeight * start - rect.top;
+    const total = rect.height + viewportHeight * (start - end);
+    return clamp(distance / Math.max(total, 1));
+  };
+
+  const motionRuntime = (() => {
+    const callbacks = new Set();
+    const state = {
+      time: 0,
+      delta: 1 / 60,
+      scrollY: 0,
+      scrollProgress: 0,
+      pointer: { x: 0, y: 0, px: window.innerWidth * 0.5, py: window.innerHeight * 0.32 },
+      pointerTarget: { x: 0, y: 0, px: window.innerWidth * 0.5, py: window.innerHeight * 0.32 },
+      width: window.innerWidth,
+      height: window.innerHeight,
+      isMobile: window.innerWidth < 768,
+      reduceMotion: false,
+      canUsePointerParallax: false,
+      hidden: document.hidden
+    };
+    let initialized = false;
+    let rafId = 0;
+    let previousTime = 0;
+    let lenis = null;
+    let scrollLockCount = 0;
+    let resizeRaf = 0;
+
+    const reduceMotionQuery = () =>
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const pointerQuery = () =>
+      window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    const updatePreferences = () => {
+      state.width = window.innerWidth;
+      state.height = window.innerHeight;
+      state.isMobile = window.innerWidth < 768;
+      state.reduceMotion = reduceMotionQuery();
+      state.canUsePointerParallax = pointerQuery() && !state.reduceMotion && !state.isMobile;
+      if (!state.canUsePointerParallax) {
+        state.pointerTarget.x = 0;
+        state.pointerTarget.y = 0;
+        state.pointerTarget.px = state.width * 0.5;
+        state.pointerTarget.py = state.height * 0.32;
+      }
+    };
+
+    const getScrollLimit = () => {
+      const root = document.documentElement;
+      const body = document.body;
+      return Math.max(1, Math.max(root.scrollHeight, body ? body.scrollHeight : 0) - window.innerHeight);
+    };
+
+    const updateScrollState = () => {
+      state.scrollY = lenis && typeof lenis.scroll === "number" ? lenis.scroll : window.scrollY || window.pageYOffset || 0;
+      state.scrollProgress = clamp(state.scrollY / getScrollLimit());
+      document.documentElement.style.setProperty("--scroll", `${Math.round(state.scrollY)}`);
+    };
+
+    const updatePointerState = (delta) => {
+      state.pointer.x = damp(state.pointer.x, state.pointerTarget.x, 5.4, delta);
+      state.pointer.y = damp(state.pointer.y, state.pointerTarget.y, 5.4, delta);
+      state.pointer.px = damp(state.pointer.px, state.pointerTarget.px, 6.2, delta);
+      state.pointer.py = damp(state.pointer.py, state.pointerTarget.py, 6.2, delta);
+      document.documentElement.style.setProperty("--mx", `${state.pointer.px}px`);
+      document.documentElement.style.setProperty("--my", `${state.pointer.py}px`);
+    };
+
+    const onPointer = (event) => {
+      if (!state.canUsePointerParallax) return;
+      state.pointerTarget.px = event.clientX;
+      state.pointerTarget.py = event.clientY;
+      state.pointerTarget.x = (event.clientX / Math.max(window.innerWidth, 1)) * 2 - 1;
+      state.pointerTarget.y = -((event.clientY / Math.max(window.innerHeight, 1)) * 2 - 1);
+    };
+
+    const onResize = () => {
+      cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => {
+        updatePreferences();
+        updateScrollState();
+      });
+    };
+
+    const onVisibility = () => {
+      state.hidden = document.hidden;
+      previousTime = performance.now();
+    };
+
+    const scrollTo = (target, options = {}) => {
+      const element = typeof target === "string" ? document.querySelector(target) : target;
+      if (!element && typeof target !== "number") return;
+      const header = document.querySelector("[data-site-header]");
+      const headerOffset = header ? header.getBoundingClientRect().height : 0;
+      const offset = Object.prototype.hasOwnProperty.call(options, "offset") ? options.offset : -headerOffset - 12;
+      const easing = options.easing || ((value) => 1 - Math.pow(1 - value, 4));
+      if (lenis && !state.reduceMotion) {
+        lenis.scrollTo(typeof target === "number" ? target : element, {
+          offset,
+          duration: options.duration || 1.08,
+          easing
+        });
+        return;
+      }
+      const top =
+        typeof target === "number"
+          ? target
+          : element.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) + offset;
+      window.scrollTo({ top, behavior: state.reduceMotion ? "auto" : "smooth" });
+    };
+
+    const onAnchorClick = (event) => {
+      const link = event.target.closest ? event.target.closest('a[href^="#"]') : null;
+      if (!link || link.hasAttribute("data-native-scroll")) return;
+      const hash = link.getAttribute("href");
+      if (!hash || hash === "#") return;
+      const target = document.querySelector(hash);
+      if (!target) return;
+      event.preventDefault();
+      if (history.pushState) history.pushState(null, "", hash);
+      scrollTo(target);
+    };
+
+    const frame = (time) => {
+      rafId = requestAnimationFrame(frame);
+      if (!previousTime) previousTime = time;
+      const delta = Math.min((time - previousTime) / 1000, 0.05) || 1 / 60;
+      previousTime = time;
+      state.time = time;
+      state.delta = delta;
+
+      if (lenis && !state.reduceMotion) lenis.raf(time);
+      updateScrollState();
+      updatePointerState(delta);
+      if (state.hidden) return;
+      callbacks.forEach((callback) => callback(time, delta, state));
+    };
+
+    const init = () => {
+      if (initialized) return;
+      initialized = true;
+      updatePreferences();
+      updateScrollState();
+      if (window.Lenis && !state.reduceMotion) {
+        lenis = new window.Lenis({
+          smoothWheel: true,
+          lerp: 0.075,
+          wheelMultiplier: 0.9,
+          touchMultiplier: 1.05,
+          syncTouch: false
+        });
+      }
+      window.addEventListener("pointermove", onPointer, { passive: true });
+      window.addEventListener("resize", onResize, { passive: true });
+      document.addEventListener("visibilitychange", onVisibility);
+      document.addEventListener("click", onAnchorClick);
+      rafId = requestAnimationFrame(frame);
+    };
+
+    const destroy = () => {
+      if (!initialized) return;
+      initialized = false;
+      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(resizeRaf);
+      lenis?.destroy?.();
+      lenis = null;
+      callbacks.clear();
+      window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("click", onAnchorClick);
+      document.documentElement.classList.remove("scroll-locked");
+      scrollLockCount = 0;
+    };
+
+    return {
+      state,
+      get lenis() {
+        return lenis;
+      },
+      init,
+      destroy,
+      addFrameCallback(callback) {
+        init();
+        callbacks.add(callback);
+        return () => callbacks.delete(callback);
+      },
+      scrollTo,
+      getSectionProgress,
+      lockScroll() {
+        scrollLockCount += 1;
+        if (scrollLockCount === 1) {
+          lenis?.stop?.();
+          document.documentElement.classList.add("scroll-locked");
+        }
+      },
+      unlockScroll() {
+        scrollLockCount = Math.max(0, scrollLockCount - 1);
+        if (scrollLockCount === 0) {
+          document.documentElement.classList.remove("scroll-locked");
+          lenis?.start?.();
+        }
+      }
+    };
+  })();
+
+  window.NousMotion = motionRuntime;
+
   const useLogoFallback = (event) => {
     if (event.currentTarget.src.includes("nous-logo.webp")) {
       event.currentTarget.src = logoFallbackPath;
@@ -262,7 +486,7 @@
         ["Focused on booked calls", "Every page, form and AI flow points customers toward a useful next step."],
         ["Human handoff included", "Important conversations can move to your team with context already collected."]
       ],
-      testimonialsEyebrow: "Μαρτυρίες",
+      testimonialsEyebrow: "Testimonials",
       testimonialsTitle: "Feedback from business owners who want fewer missed leads.",
       testimonialsCopy:
         "Starter feedback from the kinds of local businesses Nous Systems AI is built for. Visitors can leave their own note below.",
@@ -299,6 +523,77 @@
         defaultRole: "Local business owner",
         pendingReview: "New feedback",
         optionalWebhookError: "Your testimonial was added locally, but the optional webhook did not receive it."
+      },
+      pricing: {
+        eyebrow: "Monthly AI Systems",
+        title: "Choose Your AI System Plan",
+        copy: "Start with a monthly AI system built for your business. No large upfront setup fee.",
+        recommendationTitle: "Recommended Plan For You",
+        recommendationText: "Based on your selected automations, {plan} is the best fit for {industry}.",
+        recommendedLabel: "Recommended",
+        selectedModulesLabel: "Selected automations",
+        noModulesLabel: "Try the interactive demo above to personalize this recommendation.",
+        note: "Activation included. Minimum 3-month subscription recommended for full setup and optimization.",
+        widgetTitle: "After activation, your business receives a website AI widget.",
+        widgetCopy: "This can be added to your existing website, or we can install it for you.",
+        widgetCode: "<script src=\"https://noussystems.ai/widget.js\" data-client-id=\"YOUR_CLIENT_ID\"></script>",
+        plans: [
+          {
+            id: "starter",
+            name: "Starter",
+            price: "200€",
+            period: "/month",
+            bestFor: "Best for small businesses that want instant replies and lead capture.",
+            includes: ["AI Website Chat Assistant", "FAQ Answers", "Automated Lead Capture", "Email Notifications", "Basic Business Prompt Setup", "Monthly Support"],
+            cta: "Start Starter Plan"
+          },
+          {
+            id: "growth",
+            name: "Growth",
+            price: "300€",
+            period: "/month",
+            bestFor: "Best for businesses that want bookings, reviews and follow-up automation.",
+            includes: ["Everything in Starter", "Appointment / Reservation Request Flow", "Google Review Automation", "Follow-Up Automation", "Lead Qualification", "Monthly Performance Summary"],
+            cta: "Start Growth Plan"
+          },
+          {
+            id: "premium",
+            name: "Premium",
+            price: "500€",
+            period: "/month",
+            bestFor: "Best for businesses that want a full AI communication system.",
+            includes: ["Everything in Growth", "AI Voice / Missed Call Assistant", "Website / Landing Page Support", "Advanced Automation Routing", "CRM / GoHighLevel Ready Setup", "Priority Support"],
+            cta: "Start Premium Plan"
+          }
+        ]
+      },
+      onboarding: {
+        eyebrow: "Client Onboarding",
+        title: "Activate Your AI System",
+        copy: "After choosing a plan, share the business details we need to prepare your AI setup.",
+        selectedPlanLabel: "Selected plan",
+        selectedAutomationsLabel: "Selected automations",
+        noPlan: "No plan selected yet. Choose a plan above to prefill this area.",
+        fields: {
+          businessName: "Business Name",
+          industry: "Industry",
+          websiteUrl: "Website URL",
+          contactEmail: "Contact Email",
+          phone: "Phone Number",
+          workingHours: "Working Hours",
+          mainServices: "Main Services",
+          faqs: "Common Questions / FAQs",
+          bookingMethod: "Booking Method",
+          googleReviewLink: "Google Review Link",
+          preferredTone: "Preferred Tone",
+          notificationEmail: "Notification Email",
+          notes: "Anything else we should know?"
+        },
+        submit: "Send Onboarding Details",
+        loading: "Sending Details...",
+        success: "Your AI system details have been received. We’ll prepare your setup and contact you with the next steps.",
+        error: "The onboarding details could not be sent. Please try again or contact us by email.",
+        configError: "Onboarding webhook is not connected yet. Your selected plan has been saved locally."
       },
       demoTitle: "Want to see how this would work for your business?",
       demoCopy:
@@ -364,6 +659,9 @@
         }
       },
       footer: "© {year} Nous Systems AI. All rights reserved.",
+      footerDescription: "Premium AI automation systems for local businesses that need faster replies, more bookings and fewer missed leads.",
+      footerEmail: "hello@noussystems.ai",
+      footerPrivacy: "Privacy Policy",
       footerSocials: {
         group: "Social links",
         website: "Website",
@@ -537,7 +835,7 @@
         ["Εστίαση σε κρατήσεις", "Κάθε σελίδα, φόρμα και ροή AI οδηγεί τον πελάτη στο σωστό επόμενο βήμα."],
         ["Μεταφορά σε άνθρωπο", "Σημαντικές συνομιλίες μπορούν να περάσουν στην ομάδα σου με ήδη συλλεγμένο πλαίσιο."]
       ],
-      testimonialsEyebrow: "Testimonials",
+      testimonialsEyebrow: "Μαρτυρίες",
       testimonialsTitle: "Σχόλια από ιδιοκτήτες που θέλουν λιγότερα χαμένα leads.",
       testimonialsCopy:
         "Αρχικά σχόλια από τους τύπους τοπικών επιχειρήσεων για τους οποίους είναι χτισμένο το Nous Systems AI. Οι επισκέπτες μπορούν να αφήσουν το δικό τους σχόλιο παρακάτω.",
@@ -574,6 +872,77 @@
         defaultRole: "Ιδιοκτήτης τοπικής επιχείρησης",
         pendingReview: "Νέο σχόλιο",
         optionalWebhookError: "Το testimonial προστέθηκε τοπικά, αλλά το προαιρετικό webhook δεν το έλαβε."
+      },
+      pricing: {
+        eyebrow: "Μηνιαία AI Συστήματα",
+        title: "Διάλεξε Το AI System Plan",
+        copy: "Ξεκίνα με ένα μηνιαίο AI σύστημα χτισμένο για την επιχείρησή σου. Χωρίς μεγάλο αρχικό κόστος εγκατάστασης.",
+        recommendationTitle: "Προτεινόμενο Plan Για Εσένα",
+        recommendationText: "Με βάση τους αυτοματισμούς που επέλεξες, το {plan} ταιριάζει καλύτερα για {industry}.",
+        recommendedLabel: "Προτεινόμενο",
+        selectedModulesLabel: "Επιλεγμένοι αυτοματισμοί",
+        noModulesLabel: "Δοκίμασε την διαδραστική επίδειξη πιο πάνω για να γίνει προσωπική η πρόταση.",
+        note: "Η ενεργοποίηση περιλαμβάνεται. Προτείνεται ελάχιστη συνδρομή 3 μηνών για πλήρη εγκατάσταση και βελτιστοποίηση.",
+        widgetTitle: "Μετά την ενεργοποίηση, η επιχείρησή σου λαμβάνει website AI widget.",
+        widgetCopy: "Μπορεί να προστεθεί στην υπάρχουσα ιστοσελίδα σου ή να το εγκαταστήσουμε εμείς για εσένα.",
+        widgetCode: "<script src=\"https://noussystems.ai/widget.js\" data-client-id=\"YOUR_CLIENT_ID\"></script>",
+        plans: [
+          {
+            id: "starter",
+            name: "Starter",
+            price: "200€",
+            period: "/μήνα",
+            bestFor: "Για μικρές επιχειρήσεις που θέλουν άμεσες απαντήσεις και συλλογή leads.",
+            includes: ["AI Website Chat Assistant", "Απαντήσεις σε FAQs", "Αυτόματη Συλλογή Leads", "Email Notifications", "Βασική Ρύθμιση Business Prompt", "Μηνιαία Υποστήριξη"],
+            cta: "Ξεκίνα Starter Plan"
+          },
+          {
+            id: "growth",
+            name: "Growth",
+            price: "300€",
+            period: "/μήνα",
+            bestFor: "Για επιχειρήσεις που θέλουν κρατήσεις, κριτικές και follow-up automation.",
+            includes: ["Όλα του Starter", "Ροή Αιτήματος Ραντεβού / Κράτησης", "Google Review Automation", "Follow-Up Automation", "Lead Qualification", "Μηνιαία Σύνοψη Απόδοσης"],
+            cta: "Ξεκίνα Growth Plan"
+          },
+          {
+            id: "premium",
+            name: "Premium",
+            price: "500€",
+            period: "/μήνα",
+            bestFor: "Για επιχειρήσεις που θέλουν πλήρες AI σύστημα επικοινωνίας.",
+            includes: ["Όλα του Growth", "AI Voice / Missed Call Assistant", "Υποστήριξη Website / Landing Page", "Advanced Automation Routing", "CRM / GoHighLevel Ready Setup", "Priority Support"],
+            cta: "Ξεκίνα Premium Plan"
+          }
+        ]
+      },
+      onboarding: {
+        eyebrow: "Client Onboarding",
+        title: "Ενεργοποίησε Το AI Σύστημά Σου",
+        copy: "Αφού επιλέξεις plan, στείλε τα στοιχεία που χρειαζόμαστε για να προετοιμάσουμε την εγκατάσταση.",
+        selectedPlanLabel: "Επιλεγμένο plan",
+        selectedAutomationsLabel: "Επιλεγμένοι αυτοματισμοί",
+        noPlan: "Δεν έχει επιλεγεί plan ακόμα. Διάλεξε ένα plan πιο πάνω για να συμπληρωθεί αυτόματα.",
+        fields: {
+          businessName: "Όνομα Επιχείρησης",
+          industry: "Κλάδος",
+          websiteUrl: "Website URL",
+          contactEmail: "Email Επικοινωνίας",
+          phone: "Τηλέφωνο",
+          workingHours: "Ωράριο Λειτουργίας",
+          mainServices: "Βασικές Υπηρεσίες",
+          faqs: "Συχνές Ερωτήσεις / FAQs",
+          bookingMethod: "Τρόπος Κρατήσεων",
+          googleReviewLink: "Google Review Link",
+          preferredTone: "Ύφος Απάντησης",
+          notificationEmail: "Email Ειδοποιήσεων",
+          notes: "Κάτι άλλο που πρέπει να ξέρουμε;"
+        },
+        submit: "Αποστολή Στοιχείων Onboarding",
+        loading: "Αποστολή στοιχείων...",
+        success: "Λάβαμε τα στοιχεία του AI συστήματός σου. Θα προετοιμάσουμε την εγκατάσταση και θα επικοινωνήσουμε μαζί σου για τα επόμενα βήματα.",
+        error: "Τα στοιχεία onboarding δεν στάλθηκαν. Δοκίμασε ξανά ή επικοινώνησε μαζί μας με email.",
+        configError: "Το onboarding webhook δεν έχει συνδεθεί ακόμα. Το επιλεγμένο plan αποθηκεύτηκε τοπικά."
       },
       demoTitle: "Θέλεις να δεις πώς θα λειτουργούσε για τη δική σου επιχείρηση;",
       demoCopy:
@@ -639,6 +1008,9 @@
         }
       },
       footer: "© {year} Nous Systems AI. Με επιφύλαξη παντός δικαιώματος.",
+      footerDescription: "Premium AI συστήματα αυτοματοποίησης για τοπικές επιχειρήσεις που χρειάζονται ταχύτερες απαντήσεις, περισσότερες κρατήσεις και λιγότερα χαμένα leads.",
+      footerEmail: "hello@noussystems.ai",
+      footerPrivacy: "Πολιτική Απορρήτου",
       footerSocials: {
         group: "Κοινωνικοί σύνδεσμοι",
         website: "Ιστοσελίδα",
@@ -665,28 +1037,31 @@
 
   function useSceneControls() {
     useEffect(() => {
-      let raf = 0;
+      motionRuntime.init();
 
-      const setPointer = (event) => {
-        document.documentElement.style.setProperty("--mx", `${event.clientX}px`);
-        document.documentElement.style.setProperty("--my", `${event.clientY}px`);
+      const header = document.querySelector("[data-site-header]");
+      const hero = document.querySelector(".hero");
+      const setHeaderState = (isScrolled) => {
+        if (!header) return;
+        header.classList.toggle("is-scrolled", isScrolled);
       };
 
-      const setScroll = () => {
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          document.documentElement.style.setProperty("--scroll", `${window.scrollY}`);
-        });
-      };
+      setHeaderState((window.scrollY || window.pageYOffset || 0) > 80);
 
-      window.addEventListener("pointermove", setPointer, { passive: true });
-      window.addEventListener("scroll", setScroll, { passive: true });
-      setScroll();
+      const headerObserver =
+        header && hero && "IntersectionObserver" in window
+          ? new IntersectionObserver(
+              ([entry]) => {
+                setHeaderState(!entry.isIntersecting);
+              },
+              { rootMargin: "-90px 0px -72% 0px", threshold: 0 }
+            )
+          : null;
+
+      headerObserver?.observe(hero);
 
       return () => {
-        cancelAnimationFrame(raf);
-        window.removeEventListener("pointermove", setPointer);
-        window.removeEventListener("scroll", setScroll);
+        headerObserver?.disconnect();
       };
     }, []);
   }
@@ -698,23 +1073,38 @@
       const mount = mountRef.current;
       if (!mount || !window.THREE) return undefined;
 
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduceMotion = motionRuntime.state.reduceMotion;
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({
-        alpha: true,
-        antialias: true,
-        powerPreference: "high-performance",
-        preserveDrawingBuffer: false
-      });
-      const pointer = { x: 0, y: 0 };
+      const camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.1, 1000);
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({
+          alpha: true,
+          antialias: false,
+          powerPreference: "low-power",
+          preserveDrawingBuffer: false
+        });
+      } catch (error) {
+        document.documentElement.classList.add("no-webgl");
+        console.warn("[Nous] WebGL unavailable; using CSS background fallback.", error);
+        return undefined;
+      }
+      const isLowPowerDevice =
+        window.innerWidth < 760 ||
+        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+        (navigator.deviceMemory && navigator.deviceMemory <= 4);
+      const mainGroup = new THREE.Group();
+      const lookTarget = new THREE.Vector3(0, 0, 0);
+      const targetLook = new THREE.Vector3(0, 0, 0);
 
       camera.position.set(0, 0, 86);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+      renderer.domElement.setAttribute("aria-hidden", "true");
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isLowPowerDevice ? 1.1 : 1.45));
       renderer.setSize(window.innerWidth, window.innerHeight);
       mount.appendChild(renderer.domElement);
+      scene.add(mainGroup);
 
-      const particleCount = window.innerWidth < 700 ? 160 : 340;
+      const particleCount = isLowPowerDevice ? 70 : 150;
       const particleGeometry = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
       const speeds = new Float32Array(particleCount);
@@ -739,14 +1129,14 @@
       });
 
       const particles = new THREE.Points(particleGeometry, particleMaterial);
-      scene.add(particles);
+      mainGroup.add(particles);
 
       const grid = new THREE.GridHelper(190, 48, 0x1ea7ff, 0x102a46);
       grid.position.y = -42;
       grid.position.z = -34;
       grid.material.transparent = true;
       grid.material.opacity = 0.16;
-      scene.add(grid);
+      mainGroup.add(grid);
 
       const coreMaterial = new THREE.MeshBasicMaterial({
         color: 0x41c9ff,
@@ -757,56 +1147,403 @@
       });
       const core = new THREE.Mesh(new THREE.IcosahedronGeometry(15, 1), coreMaterial);
       core.position.set(42, 0, -26);
-      scene.add(core);
+      mainGroup.add(core);
 
-      const onResize = () => {
+      let resizeRaf = 0;
+      const applyResize = () => {
+        const mobile = window.innerWidth < 768;
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile || isLowPowerDevice ? 1.1 : 1.45));
         renderer.setSize(window.innerWidth, window.innerHeight);
       };
-
-      const onPointer = (event) => {
-        pointer.x = (event.clientX / window.innerWidth - 0.5) * 2;
-        pointer.y = (event.clientY / window.innerHeight - 0.5) * 2;
+      const onResize = () => {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(applyResize);
       };
 
       window.addEventListener("resize", onResize);
-      window.addEventListener("pointermove", onPointer, { passive: true });
 
       let frame = 0;
-      let animationId = 0;
+      let lastFrame = 0;
+      let sceneVisible = true;
 
-      const renderFrame = () => {
-        frame += reduceMotion ? 0.001 : 0.0035;
-        particles.rotation.y = frame * 0.06 + pointer.x * 0.035;
-        particles.rotation.x = pointer.y * 0.02;
-        core.rotation.x = frame * 0.4;
-        core.rotation.y = frame * 0.32;
-        grid.position.z = -34 + Math.sin(frame * 0.55) * 0.8;
-        camera.position.x += (pointer.x * 2.4 - camera.position.x) * 0.025;
-        camera.position.y += (-pointer.y * 1.6 - camera.position.y) * 0.025;
-        camera.lookAt(scene.position);
+      const heroNode = document.querySelector(".hero");
+      const serviceNode = document.querySelector("#services");
+      const howNode = document.querySelector("#how");
+      const sceneObserver =
+        heroNode && "IntersectionObserver" in window
+          ? new IntersectionObserver(
+              ([entry]) => {
+                sceneVisible = entry.isIntersecting || window.scrollY < window.innerHeight * 1.8;
+              },
+              { rootMargin: "30% 0px 30% 0px", threshold: 0.01 }
+            )
+          : null;
+
+      sceneObserver?.observe(heroNode);
+
+      const renderFrame = (time = 0, delta = 1 / 60, runtimeState = motionRuntime.state) => {
+        const targetFrameMs = isLowPowerDevice ? 50 : 34;
+        if (time - lastFrame < targetFrameMs || document.hidden || !sceneVisible) {
+          return;
+        }
+        lastFrame = time;
+        const mobile = runtimeState.isMobile;
+        const pointerStrength = runtimeState.canUsePointerParallax ? (mobile ? 0 : 1) : 0;
+        const heroProgress = motionRuntime.getSectionProgress(heroNode, 1, 0.08);
+        const serviceProgress = motionRuntime.getSectionProgress(serviceNode, 0.88, 0.16);
+        const howProgress = motionRuntime.getSectionProgress(howNode, 0.88, 0.16);
+        const serviceActive = smoothstep(0.1, 0.75, serviceProgress);
+        const howActive = smoothstep(0.1, 0.75, howProgress);
+
+        frame += reduceMotion || runtimeState.reduceMotion ? 0.0006 : delta;
+        particles.rotation.y = damp(particles.rotation.y, frame * 0.08 + runtimeState.pointer.x * 0.04 * pointerStrength, 4.2, delta);
+        particles.rotation.x = damp(particles.rotation.x, runtimeState.pointer.y * 0.024 * pointerStrength, 4.2, delta);
+        core.rotation.x = damp(core.rotation.x, frame * 0.5, 3.4, delta);
+        core.rotation.y = damp(core.rotation.y, frame * 0.38 + serviceActive * 0.2, 3.4, delta);
+        grid.position.z = damp(grid.position.z, -34 + Math.sin(frame * 0.7) * 0.8 - heroProgress * 5, 2.4, delta);
+        mainGroup.rotation.y = damp(mainGroup.rotation.y, runtimeState.pointer.x * 0.028 * pointerStrength - serviceActive * 0.045 + howActive * 0.035, 3.2, delta);
+        mainGroup.rotation.x = damp(mainGroup.rotation.x, runtimeState.pointer.y * 0.016 * pointerStrength, 3.2, delta);
+        core.position.x = damp(core.position.x, 42 - serviceActive * 18 + howActive * 10, 3.4, delta);
+        core.position.y = damp(core.position.y, serviceActive * 4 - howActive * 5, 3.4, delta);
+
+        const cameraTarget = {
+          x: runtimeState.pointer.x * 1.15 * pointerStrength - serviceActive * 3.8 + howActive * 3.2,
+          y: -runtimeState.pointer.y * 0.82 * pointerStrength + serviceActive * 1.1 - howActive * 0.7,
+          z: 86 - heroProgress * 12 - serviceActive * 8 - howActive * 4,
+          fov: 54 - serviceActive * 4 + howActive * 2
+        };
+        camera.position.x = damp(camera.position.x, cameraTarget.x, 4.2, delta);
+        camera.position.y = damp(camera.position.y, cameraTarget.y, 4.2, delta);
+        camera.position.z = damp(camera.position.z, cameraTarget.z, 4.2, delta);
+        targetLook.set(serviceActive * 2 - howActive * 1.4, serviceActive * 0.4, 0);
+        lookTarget.x = damp(lookTarget.x, targetLook.x, 4.4, delta);
+        lookTarget.y = damp(lookTarget.y, targetLook.y, 4.4, delta);
+        lookTarget.z = damp(lookTarget.z, targetLook.z, 4.4, delta);
+        if (Math.abs(camera.fov - cameraTarget.fov) > 0.02) {
+          camera.fov = damp(camera.fov, cameraTarget.fov, 3.4, delta);
+          camera.updateProjectionMatrix();
+        }
+        camera.lookAt(lookTarget);
         renderer.render(scene, camera);
-        animationId = requestAnimationFrame(renderFrame);
       };
 
-      renderFrame();
+      renderer.render(scene, camera);
+      const unsubscribeFrame = motionRuntime.addFrameCallback(renderFrame);
 
       return () => {
-        cancelAnimationFrame(animationId);
+        unsubscribeFrame();
+        cancelAnimationFrame(resizeRaf);
+        sceneObserver?.disconnect();
         window.removeEventListener("resize", onResize);
-        window.removeEventListener("pointermove", onPointer);
-        scene.remove(particles, grid, core);
+        scene.remove(mainGroup);
+        mainGroup.remove(particles, grid, core);
         particleGeometry.dispose();
         particleMaterial.dispose();
         core.geometry.dispose();
         coreMaterial.dispose();
+        grid.geometry?.dispose?.();
+        grid.material?.dispose?.();
         renderer.dispose();
         if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
       };
     }, []);
 
     return h("div", { className: "three-layer", ref: mountRef, "aria-hidden": "true" });
+  }
+
+  function FluidInkCanvas() {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return undefined;
+      const context = canvas.getContext("2d", { alpha: true });
+      if (!context) return undefined;
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const palette = ["rgba(101,234,255,", "rgba(30,167,255,", "rgba(84,119,255,", "rgba(184,92,255,", "rgba(255,78,209,"];
+      const splats = [];
+      const pointer = { initialized: false, x: 0, y: 0 };
+      const startTime = performance.now();
+      const isCompact = () => window.innerWidth < 760;
+      const isPerformanceMode = () =>
+        isCompact() ||
+        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+        (navigator.deviceMemory && navigator.deviceMemory <= 4);
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let resizeRaf = 0;
+      let unsubscribeFrame = null;
+      let orbitAngle = 0;
+      let queuedWaves = isPerformanceMode() ? 1 : 3;
+      let lastWave = 0;
+      let lastFrame = 0;
+      let lastPointerSplat = 0;
+      let isHeroVisible = true;
+
+      const resize = () => {
+        dpr = Math.min(window.devicePixelRatio || 1, isPerformanceMode() ? 1 : 1.1);
+        width = Math.max(1, canvas.clientWidth);
+        height = Math.max(1, canvas.clientHeight);
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+      const scheduleResize = () => {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(resize);
+      };
+
+      const randomColor = (alpha = 0.72) => `${palette[Math.floor(Math.random() * palette.length)]}${alpha})`;
+
+      const addSplat = (x, y, force = 1, count = 8) => {
+        const amount = Math.min(isPerformanceMode() ? 4 : 7, Math.max(2, Math.round(count * force)));
+        for (let index = 0; index < amount; index += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = (0.18 + Math.random() * 0.72) * force;
+          const radius = (42 + Math.random() * (isPerformanceMode() ? 62 : 92)) * force;
+          splats.push({
+            x: x + (Math.random() - 0.5) * 42 * force,
+            y: y + (Math.random() - 0.5) * 42 * force,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            radius,
+            life: 1,
+            decay: 0.006 + Math.random() * 0.008,
+            color: randomColor(0.58 + Math.random() * 0.22),
+            spin: (Math.random() - 0.5) * 0.018,
+            angle
+          });
+        }
+        const maxSplats = isPerformanceMode() ? 56 : 110;
+        if (splats.length > maxSplats) splats.splice(0, splats.length - maxSplats);
+      };
+
+      const loadBurst = () => {
+        const burstCount = isPerformanceMode() ? 8 : 16;
+        for (let index = 0; index < burstCount; index += 1) {
+          addSplat(Math.random() * width, Math.random() * height, 0.62 + Math.random() * 0.88, 2);
+        }
+      };
+
+      const drawBase = (fade = 0.09) => {
+        context.globalCompositeOperation = "source-over";
+        context.fillStyle = `rgba(4, 5, 12, ${fade})`;
+        context.fillRect(0, 0, width, height);
+
+        const scrim = context.createRadialGradient(width * 0.5, height * 0.46, 0, width * 0.5, height * 0.46, Math.max(width, height) * 0.72);
+        scrim.addColorStop(0, "rgba(4,5,12,0.28)");
+        scrim.addColorStop(0.44, "rgba(4,5,12,0.12)");
+        scrim.addColorStop(1, "rgba(4,5,12,0.02)");
+        context.fillStyle = scrim;
+        context.fillRect(0, 0, width, height);
+      };
+
+      const drawSplat = (splat, time) => {
+        const pulse = 0.88 + Math.sin(time * 0.0017 + splat.angle) * 0.12;
+        const radius = splat.radius * splat.life * pulse;
+        const gradient = context.createRadialGradient(splat.x, splat.y, radius * 0.04, splat.x, splat.y, radius);
+        gradient.addColorStop(0, splat.color);
+        gradient.addColorStop(0.32, splat.color.replace(/[\d.]+\)$/g, `${0.2 * splat.life})`));
+        gradient.addColorStop(0.72, splat.color.replace(/[\d.]+\)$/g, `${0.065 * splat.life})`));
+        gradient.addColorStop(1, "rgba(4,5,12,0)");
+
+        context.save();
+        context.translate(splat.x, splat.y);
+        context.rotate(splat.angle + time * splat.spin);
+        context.scale(1.65, 0.72 + Math.sin(time * 0.001 + splat.angle) * 0.16);
+        context.translate(-splat.x, -splat.y);
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(splat.x, splat.y, radius, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+      };
+
+      const render = (time) => {
+        const targetFrameMs = isPerformanceMode() ? 50 : 34;
+        if (time - lastFrame < targetFrameMs) {
+          return;
+        }
+        lastFrame = time;
+
+        if (!isHeroVisible || document.hidden) {
+          return;
+        }
+
+        const elapsed = time - startTime;
+        drawBase(0.08);
+
+        if (elapsed > 700 && !reduceMotion) {
+          orbitAngle += 0.026;
+          const baseRadius = Math.min(300, width * 0.34, height * 0.34);
+          const radius = baseRadius * (0.72 + 0.28 * Math.sin(orbitAngle * 0.37));
+          const x = width * 0.5 + Math.cos(orbitAngle) * radius;
+          const y = height * 0.47 + Math.sin(orbitAngle) * radius;
+          if (Math.round(orbitAngle * 100) % (isPerformanceMode() ? 10 : 6) === 0) addSplat(x, y, isPerformanceMode() ? 0.3 : 0.42, 1);
+        }
+
+        if (queuedWaves > 0 && time - lastWave > 160 && !reduceMotion) {
+          queuedWaves -= 1;
+          lastWave = time;
+          addSplat(width * (0.18 + Math.random() * 0.64), height * (0.18 + Math.random() * 0.64), isPerformanceMode() ? 0.55 : 0.82, 4);
+        }
+
+        context.globalCompositeOperation = "lighter";
+        for (let index = splats.length - 1; index >= 0; index -= 1) {
+          const splat = splats[index];
+          splat.angle += splat.spin;
+          splat.vx += Math.sin(time * 0.0012 + splat.y * 0.01) * 0.012;
+          splat.vy += Math.cos(time * 0.001 + splat.x * 0.01) * 0.012;
+          splat.x += splat.vx;
+          splat.y += splat.vy;
+          splat.life -= splat.decay;
+          if (splat.life <= 0) {
+            splats.splice(index, 1);
+            continue;
+          }
+          drawSplat(splat, time);
+          if (splat.x < -240 || splat.x > width + 240 || splat.y < -240 || splat.y > height + 240) {
+            splats.splice(index, 1);
+          }
+        }
+      };
+
+      const handlePointer = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (!pointer.initialized) {
+          pointer.initialized = true;
+          pointer.x = x;
+          pointer.y = y;
+          addSplat(x, y, 0.85, 4);
+          return;
+        }
+        const distance = Math.hypot(x - pointer.x, y - pointer.y);
+        pointer.x = x;
+        pointer.y = y;
+        const now = performance.now();
+        if (distance > 14 && now - lastPointerSplat > 70) {
+          lastPointerSplat = now;
+          addSplat(x, y, Math.min(1.05, distance / 52), 2);
+        }
+      };
+
+      const handleTouch = (event) => {
+        Array.from(event.touches || []).slice(0, 1).forEach((touch) => handlePointer(touch));
+      };
+
+      resize();
+      drawBase(1);
+      loadBurst();
+
+      if (reduceMotion) {
+        splats.slice(0, 48).forEach((splat) => drawSplat(splat, performance.now()));
+      } else {
+        unsubscribeFrame = motionRuntime.addFrameCallback((time) => render(time));
+      }
+
+      const visibilityObserver =
+        "IntersectionObserver" in window
+          ? new IntersectionObserver(
+              ([entry]) => {
+                isHeroVisible = entry.isIntersecting;
+              },
+              { threshold: 0.02 }
+            )
+          : null;
+
+      visibilityObserver?.observe(canvas);
+      window.addEventListener("resize", scheduleResize, { passive: true });
+      window.addEventListener("pointermove", handlePointer, { passive: true });
+      window.addEventListener("touchmove", handleTouch, { passive: true });
+
+      return () => {
+        unsubscribeFrame?.();
+        cancelAnimationFrame(resizeRaf);
+        visibilityObserver?.disconnect();
+        window.removeEventListener("resize", scheduleResize);
+        window.removeEventListener("pointermove", handlePointer);
+        window.removeEventListener("touchmove", handleTouch);
+      };
+    }, []);
+
+    return h("canvas", { className: "hero-fluid-canvas", ref: canvasRef, "aria-hidden": "true" });
+  }
+
+  function WordReveal({ as = "h1", text, className = "", baseDelay = 480, stagger = 85, duration = 720, y = 26 }) {
+    const words = text.split(" ");
+    return h(
+      as,
+      { className },
+      words.map((word, index) =>
+        h(
+          "i",
+          {
+            className: "reveal-word",
+            key: `${word}-${index}`,
+            style: {
+              "--word-delay": `${baseDelay + index * stagger}ms`,
+              "--word-duration": `${duration}ms`,
+              "--word-y": `${y}px`
+            }
+          },
+          word,
+          index < words.length - 1 ? "\u00A0" : ""
+        )
+      )
+    );
+  }
+
+  function HeroDemoStartBar({ lang }) {
+    const copy =
+      lang === "el"
+        ? {
+            placeholder: "Όνομα επιχείρησης",
+            cta: "Δες AI demo",
+            label: "Start AI demo"
+          }
+        : {
+            placeholder: "Business name",
+            cta: "See AI demo",
+            label: "Start AI demo"
+          };
+    const [businessName, setBusinessName] = useState("");
+
+    const submit = (event) => {
+      event.preventDefault();
+      const payload = {
+        businessName: businessName.trim(),
+        moduleIds: ["chatAgents", "appointmentBooking", "leadCapture"],
+        updatedAt: new Date().toISOString()
+      };
+      saveJsonStorage("nous-hero-demo-start", payload);
+      window.dispatchEvent(new CustomEvent("nous:hero-demo-start", { detail: payload }));
+      motionRuntime.scrollTo("#ai-demo");
+    };
+
+    return h(
+      "form",
+      { className: "hero-demo-start-bar", onSubmit: submit, "aria-label": copy.label },
+      h("input", {
+        type: "text",
+        value: businessName,
+        onChange: (event) => setBusinessName(event.target.value),
+        placeholder: copy.placeholder,
+        "aria-label": copy.placeholder,
+        autoComplete: "organization"
+      }),
+      h(
+        motion.button,
+        { type: "submit", whileTap: { scale: 0.98 } },
+        copy.cta,
+        h(Icon, { name: "arrow-right" })
+      )
+    );
   }
 
   function Loader({ loaded }) {
@@ -893,6 +1630,7 @@
       motion.header,
       {
         className: "nav",
+        "data-site-header": true,
         initial: { y: -70, opacity: 0 },
         animate: { y: 0, opacity: 1 },
         transition: { duration: 0.6, delay: 0.45, ease: smoothEase }
@@ -1017,6 +1755,221 @@
 
   const formatText = (template, values) =>
     Object.entries(values).reduce((text, [key, value]) => text.replaceAll(`{${key}}`, value), template);
+
+  const planPriority = { starter: 1, growth: 2, premium: 3 };
+
+  const getRecommendedPlanId = (moduleIds = []) => {
+    const premiumModules = ["voiceAssistants", "websiteCreation", "advancedRouting", "crmRouting"];
+    const growthModules = ["appointmentBooking", "reviewSystem", "followUp"];
+
+    if (moduleIds.some((moduleId) => premiumModules.includes(moduleId))) return "premium";
+    if (moduleIds.some((moduleId) => growthModules.includes(moduleId))) return "growth";
+    return "starter";
+  };
+
+  const readJsonStorage = (key, fallback = null) => {
+    try {
+      const stored = window.localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : fallback;
+    } catch (error) {
+      console.warn(`[Nous] Could not read ${key}`, error);
+      return fallback;
+    }
+  };
+
+  const saveJsonStorage = (key, value) => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.warn(`[Nous] Could not save ${key}`, error);
+    }
+  };
+
+  const getPaymentLink = (planId) => {
+    const links = (window.NOUS_CONFIG && window.NOUS_CONFIG.PAYMENT_LINKS) || {};
+    return links[planId] || `https://buy.stripe.com/placeholder-${planId}`;
+  };
+
+  const normalizePlanSelection = (selection = {}, fallbackPlanId = "starter") => {
+    const moduleIds = Array.isArray(selection.moduleIds) ? selection.moduleIds : [];
+    const selectedPlanId = selection.selectedPlanId || selection.recommendedPlanId || getRecommendedPlanId(moduleIds) || fallbackPlanId;
+
+    return {
+      selectedPlanId,
+      selectedPlan: selection.selectedPlan || "",
+      recommendedPlanId: selection.recommendedPlanId || getRecommendedPlanId(moduleIds),
+      businessName: selection.businessName || "",
+      industry: selection.industry || "",
+      modules: Array.isArray(selection.modules) ? selection.modules : [],
+      moduleIds,
+      automationGoal: selection.automationGoal || "",
+      subscriptionStatus: selection.subscriptionStatus || "",
+      mockPaymentCompletedAt: selection.mockPaymentCompletedAt || "",
+      updatedAt: selection.updatedAt || new Date().toISOString()
+    };
+  };
+
+  const slugifyClientPart = (value = "") =>
+    value
+      .toString()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 32);
+
+  const generateClientId = (businessName = "", industry = "") => {
+    const base = slugifyClientPart(businessName) || slugifyClientPart(industry) || "client";
+    const suffix = Date.now().toString(36).slice(-5);
+    return `nous-${base}-${suffix}`;
+  };
+
+  const getClientShareLink = (clientId) => {
+    const origin = window.location.origin || "http://localhost:5173";
+    const path = window.location.pathname || "/";
+    return `${origin}${path}?mode=client&clientId=${encodeURIComponent(clientId)}`;
+  };
+
+  const getClients = () => {
+    const stored = readJsonStorage("nous_clients", []);
+    if (Array.isArray(stored)) return stored;
+    if (stored && typeof stored === "object") return Object.values(stored);
+    return [];
+  };
+
+  const saveClientConfig = (clientConfig) => {
+    const clients = getClients();
+    const nextClients = [clientConfig, ...clients.filter((client) => client.clientId !== clientConfig.clientId)];
+    saveJsonStorage("nous_clients", nextClients);
+    saveJsonStorage("nous_active_client_id", clientConfig.clientId);
+    return clientConfig;
+  };
+
+  const getClientConfig = (clientId) => getClients().find((client) => client.clientId === clientId);
+
+  const getClientLeads = () => readJsonStorage("nous_client_leads", []);
+
+  const detectLeadIntent = (message = "") => {
+    const text = message.toLowerCase();
+    const keywords = [
+      "appointment",
+      "booking",
+      "reservation",
+      "call me",
+      "price",
+      "quote",
+      "consultation",
+      "ενδιαφέρομαι",
+      "ραντεβού",
+      "κρατηση",
+      "κράτηση",
+      "προσφορά"
+    ];
+    return keywords.find((keyword) => text.includes(keyword)) || "";
+  };
+
+  const saveClientLead = (clientConfig, message, intent) => {
+    const lead = {
+      leadId: `lead-${Date.now().toString(36)}`,
+      clientId: clientConfig.clientId,
+      businessName: clientConfig.businessName,
+      industry: clientConfig.industry,
+      plan: clientConfig.plan,
+      message,
+      detectedIntent: intent,
+      createdAt: new Date().toISOString()
+    };
+    saveJsonStorage("nous_client_leads", [lead, ...getClientLeads()]);
+    return lead;
+  };
+
+  const getInstallRequests = () => readJsonStorage("nous_install_requests", []);
+
+  const saveInstallRequest = (clientConfig, installType) => {
+    const request = {
+      requestId: `install-${Date.now().toString(36)}`,
+      clientId: clientConfig.clientId,
+      businessName: clientConfig.businessName,
+      installType,
+      status: "Local Mock Requested",
+      createdAt: new Date().toISOString()
+    };
+    saveJsonStorage("nous_install_requests", [request, ...getInstallRequests()]);
+    return request;
+  };
+
+  const copyToClipboard = async (text) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return true;
+  };
+
+  const parseAssistantReply = (value) => {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      try {
+        return parseAssistantReply(JSON.parse(trimmed));
+      } catch (error) {
+        try {
+          return parseAssistantReply(JSON.parse(`{${trimmed}}`));
+        } catch (wrappedError) {
+          const replyMatch = trimmed.match(/^["']?reply["']?\s*:\s*(["']?)([\s\S]*?)\1\s*$/i);
+          return replyMatch ? replyMatch[2].replace(/\\"/g, "\"").trim() : trimmed;
+        }
+      }
+    }
+    if (Array.isArray(value)) return value.map(parseAssistantReply).filter(Boolean).join("\n");
+    if (value && typeof value === "object") {
+      return parseAssistantReply(
+        value.reply ||
+          value.response ||
+          value.message ||
+          value.answer ||
+          value.content ||
+          value.text ||
+          value.output_text ||
+          value.choices?.[0]?.message?.content
+      );
+    }
+    return "";
+  };
+
+  const readAssistantResponse = async (response) => {
+    const textPromise = response.clone().text();
+    let parsed = null;
+    try {
+      parsed = await response.json();
+    } catch (error) {
+      parsed = null;
+    }
+    const text = await textPromise;
+    return parseAssistantReply(parsed) || parseAssistantReply(text);
+  };
+
+  const buildClientFallbackReply = (clientConfig) =>
+    `Thanks for your message. ${clientConfig.businessName || "This business"} can capture your request here and follow up with the right next step. If you want an appointment, quote or consultation, please share your name, phone and preferred time.`;
+
+  const getClientHeroText = (clientConfig) => {
+    const business = clientConfig.businessName || "This business";
+    const industry = clientConfig.industry || "local business";
+    return {
+      title: `${business} AI Assistant`,
+      copy: `Ask about services, working hours, bookings or common questions. This AI page is configured for ${industry} and can capture customer requests 24/7.`
+    };
+  };
 
   function getInteractiveDemoData(lang) {
     if (lang === "el") {
@@ -1282,6 +2235,8 @@
     return h(
       "section",
       { className: "hero cinematic-hero", id: "top", ref: heroRef },
+      h(FluidInkCanvas),
+      h("div", { className: "hero-fluid-scrim", "aria-hidden": "true" }),
       h(motion.div, {
         className: "hero-scroll-aurora",
         style: shouldReduceMotion ? { opacity: 0.28 } : { y: ambientY, z: -80, transformPerspective: 1200, opacity: ambientOpacity },
@@ -1306,8 +2261,19 @@
         h(
           motion.div,
           { className: "hero-copy-layer", style: copyMotion },
-          h("h1", null, c.heroTitle),
-          h("p", null, c.heroCopy),
+          h(
+            motion.div,
+            {
+              className: "hero-kicker",
+              initial: { opacity: 0, y: 16 },
+              animate: { opacity: 1, y: 0 },
+              transition: { duration: 0.7, delay: 0.32, ease: smoothEase }
+            },
+            c.heroKicker
+          ),
+          h(WordReveal, { as: "h1", text: c.heroTitle, baseDelay: 480, stagger: 72, duration: 720, y: 26 }),
+          h(WordReveal, { as: "p", text: c.heroCopy, className: "hero-subline", baseDelay: 930, stagger: 18, duration: 620, y: 14 }),
+          h(HeroDemoStartBar, { lang }),
           h(
             "div",
             { className: "hero-actions" },
@@ -1447,6 +2413,18 @@
           };
     const liveStatuses = Array.from(new Set([...c.statusItems, ...selectedModuleIds.map((id) => statusMap[id]).filter(Boolean)])).slice(0, 6);
 
+    useEffect(() => {
+      const applyHeroDemoStart = (event) => {
+        const payload = event.detail || readJsonStorage("nous-hero-demo-start", {});
+        if (payload.businessName) setBusinessName(payload.businessName);
+        if (Array.isArray(payload.moduleIds) && payload.moduleIds.length) {
+          setSelectedModuleIds(payload.moduleIds);
+        }
+      };
+      window.addEventListener("nous:hero-demo-start", applyHeroDemoStart);
+      return () => window.removeEventListener("nous:hero-demo-start", applyHeroDemoStart);
+    }, []);
+
     const toggleModule = (moduleId) => {
       setSelectedModuleIds((current) => {
         if (current.includes(moduleId)) {
@@ -1459,18 +2437,25 @@
     const buildSelectionPayload = () => ({
       businessName: businessName.trim(),
       industry: selectedIndustry.label,
+      modules: selectedModules.map((module) => module.label),
+      moduleIds: selectedModuleIds,
+      recommendedPlanId: getRecommendedPlanId(selectedModuleIds),
       automationGoal: formatText(c.contactSummary, { industry: selectedIndustry.label, modules: moduleNames })
     });
 
+    useEffect(() => {
+      const payload = { ...buildSelectionPayload(), updatedAt: new Date().toISOString() };
+      saveJsonStorage("nous-subscription-selection", payload);
+      window.dispatchEvent(new CustomEvent("nous:subscription-selection", { detail: payload }));
+    }, [businessName, selectedIndustryId, selectedModuleIds, lang]);
+
     const buildForBusiness = () => {
       const payload = buildSelectionPayload();
-      try {
-        window.localStorage.setItem("nous-demo-selection", JSON.stringify(payload));
-      } catch (error) {
-        console.warn("[Nous Interactive Demo] Could not save demo selection", error);
-      }
+      saveJsonStorage("nous-demo-selection", payload);
+      saveJsonStorage("nous-subscription-selection", { ...payload, updatedAt: new Date().toISOString() });
       window.dispatchEvent(new CustomEvent("nous:demo-selection", { detail: payload }));
-      document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.dispatchEvent(new CustomEvent("nous:subscription-selection", { detail: payload }));
+      motionRuntime.scrollTo("#pricing");
     };
 
     const talkToAssistant = () => {
@@ -1678,6 +2663,494 @@
               h(motion.button, { className: "btn btn-ghost", type: "button", onClick: talkToAssistant, whileTap: { scale: 0.98 } }, c.secondaryCta, h(Icon, { name: "message-circle" }))
             )
           )
+        )
+      )
+    );
+  }
+
+  function PricingSection({ lang }) {
+    const c = content[lang].pricing;
+    const shouldReduceMotion = useReducedMotion();
+    const [selection, setSelection] = useState(() =>
+      normalizePlanSelection(readJsonStorage("nous-subscription-selection", readJsonStorage("nous-demo-selection", {})))
+    );
+    const [checkoutSelection, setCheckoutSelection] = useState(null);
+
+    useEffect(() => {
+      const handleSelection = (event) => setSelection(normalizePlanSelection(event.detail || {}));
+      window.addEventListener("nous:subscription-selection", handleSelection);
+      window.addEventListener("nous:demo-selection", handleSelection);
+      return () => {
+        window.removeEventListener("nous:subscription-selection", handleSelection);
+        window.removeEventListener("nous:demo-selection", handleSelection);
+      };
+    }, [lang]);
+
+    const recommendedPlanId = selection.recommendedPlanId || getRecommendedPlanId(selection.moduleIds);
+    const recommendedPlan = c.plans.find((plan) => plan.id === recommendedPlanId) || c.plans[0];
+    const industryLabel = selection.industry || (lang === "el" ? "την επιχείρησή σου" : "your business");
+    const moduleLabels = selection.modules && selection.modules.length ? selection.modules : [];
+
+    const startPlan = (plan) => {
+      const planPayload = {
+        ...selection,
+        selectedPlanId: plan.id,
+        selectedPlan: plan.name,
+        subscriptionStatus: "Local Mock Pending",
+        automationGoal:
+          selection.automationGoal ||
+          `Interested in AI systems for ${industryLabel} with ${moduleLabels.length ? moduleLabels.join(", ") : "AI automation"}.`,
+        updatedAt: new Date().toISOString()
+      };
+
+      saveJsonStorage("nous-selected-plan", planPayload);
+      saveJsonStorage("nous-subscription-selection", planPayload);
+      saveJsonStorage("nous-onboarding-selection", planPayload);
+      setCheckoutSelection(planPayload);
+      window.dispatchEvent(new CustomEvent("nous:subscription-selection", { detail: planPayload }));
+      window.dispatchEvent(new CustomEvent("nous:plan-selected", { detail: planPayload }));
+      window.setTimeout(() => motionRuntime.scrollTo("#mock-checkout", { offset: -120 }), 80);
+    };
+
+    const activateMockCheckout = () => {
+      if (!checkoutSelection) return;
+      const activeSelection = {
+        ...checkoutSelection,
+        subscriptionStatus: "Local Mock Active",
+        mockPaymentCompletedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      saveJsonStorage("nous-selected-plan", activeSelection);
+      saveJsonStorage("nous-subscription-selection", activeSelection);
+      saveJsonStorage("nous-onboarding-selection", activeSelection);
+      setSelection(normalizePlanSelection(activeSelection));
+      setCheckoutSelection(activeSelection);
+      window.dispatchEvent(new CustomEvent("nous:plan-selected", { detail: activeSelection }));
+      window.dispatchEvent(new CustomEvent("nous:subscription-selection", { detail: activeSelection }));
+      window.setTimeout(() => motionRuntime.scrollTo("#onboarding"), 120);
+    };
+
+    const openPlaceholderPayment = () => {
+      if (!checkoutSelection?.selectedPlanId) return;
+      const paymentLink = getPaymentLink(checkoutSelection.selectedPlanId);
+      if (paymentLink) {
+        window.open(paymentLink, "_blank", "noopener,noreferrer");
+      }
+    };
+
+    const checkoutCopy =
+      lang === "el"
+        ? {
+            eyebrow: "Local Mock Checkout",
+            title: "Δοκιμαστική ενεργοποίηση χωρίς πραγματική πληρωμή",
+            copy: "Για το localhost demo, το payment γίνεται mock. Πάτησε επιτυχία πληρωμής για να ανοίξει το onboarding και να δημιουργηθεί η AI business page.",
+            paymentSuccess: "Mock Payment Success",
+            placeholderPayment: "Άνοιγμα placeholder Stripe link",
+            status: "Subscription Status",
+            pending: "Local Mock Pending",
+            active: "Local Mock Active"
+          }
+        : {
+            eyebrow: "Local Mock Checkout",
+            title: "Test activation without a real payment",
+            copy: "For the localhost demo, payment is mocked. Confirm payment success to open onboarding and create the AI business page.",
+            paymentSuccess: "Mock Payment Success",
+            placeholderPayment: "Open placeholder Stripe link",
+            status: "Subscription Status",
+            pending: "Local Mock Pending",
+            active: "Local Mock Active"
+          };
+
+    return h(
+      "section",
+      { className: "section pricing-section", id: "pricing" },
+      h(
+        "div",
+        { className: "section-inner" },
+        h(SectionIntro, { eyebrow: c.eyebrow, title: c.title, copy: c.copy, center: true }),
+        h(
+          motion.div,
+          { className: "plan-recommendation-panel", ...reveal(0.06) },
+          h("div", { className: "recommendation-orb", "aria-hidden": "true" }, h("span", null)),
+          h(
+            "div",
+            { className: "recommendation-copy" },
+            h("span", { className: "demo-preview-kicker" }, c.recommendationTitle),
+            h("h3", null, formatText(c.recommendationText, { plan: recommendedPlan.name, industry: industryLabel })),
+            moduleLabels.length
+              ? h(
+                  "div",
+                  { className: "recommendation-modules", "aria-label": c.selectedModulesLabel },
+                  h("strong", null, c.selectedModulesLabel),
+                  moduleLabels.map((module) => h("span", { key: module }, module))
+                )
+              : h("p", null, c.noModulesLabel)
+          )
+        ),
+        h(
+          "div",
+          { className: "pricing-grid" },
+          c.plans.map((plan, index) =>
+            h(
+              motion.article,
+              {
+                className: `pricing-card ${plan.id === recommendedPlan.id ? "recommended" : ""}`,
+                key: plan.id,
+                ...reveal(index * 0.06),
+                whileHover: shouldReduceMotion ? undefined : { y: -8, rotateX: 2, rotateY: index === 1 ? 0 : index === 0 ? -1.5 : 1.5 }
+              },
+              plan.id === recommendedPlan.id && h("div", { className: "plan-badge" }, c.recommendedLabel),
+              h("div", { className: "plan-head" }, h("h3", null, plan.name), h("p", null, plan.bestFor)),
+              h("div", { className: "plan-price" }, h("strong", null, plan.price), h("span", null, plan.period)),
+              h(
+                "ul",
+                { className: "plan-includes" },
+                plan.includes.map((item) => h("li", { key: item }, h(Icon, { name: "check" }), h("span", null, item)))
+              ),
+              h(motion.button, { className: "btn btn-primary plan-cta", type: "button", onClick: () => startPlan(plan), whileTap: { scale: 0.98 } }, plan.cta, h(Icon, { name: "credit-card" }))
+            )
+          )
+        ),
+        checkoutSelection &&
+          h(
+            motion.div,
+            { className: "mock-checkout-panel", id: "mock-checkout", ...reveal(0.04) },
+            h("div", { className: "checkout-orb", "aria-hidden": "true" }, h("span", null)),
+            h(
+              "div",
+              { className: "checkout-copy" },
+              h("span", { className: "demo-preview-kicker" }, checkoutCopy.eyebrow),
+              h("h3", null, checkoutCopy.title),
+              h("p", null, checkoutCopy.copy),
+              h(
+                "div",
+                { className: "checkout-summary" },
+                h("span", null, checkoutSelection.businessName || industryLabel),
+                h("strong", null, checkoutSelection.selectedPlan || checkoutSelection.selectedPlanId),
+                h("em", null, `${checkoutCopy.status}: ${checkoutSelection.subscriptionStatus === "Local Mock Active" ? checkoutCopy.active : checkoutCopy.pending}`)
+              )
+            ),
+            h(
+              "div",
+              { className: "checkout-actions" },
+              h(motion.button, { className: "btn btn-primary", type: "button", onClick: activateMockCheckout, whileTap: { scale: 0.98 } }, checkoutCopy.paymentSuccess, h(Icon, { name: "badge-check" })),
+              h(motion.button, { className: "btn btn-ghost", type: "button", onClick: openPlaceholderPayment, whileTap: { scale: 0.98 } }, checkoutCopy.placeholderPayment, h(Icon, { name: "external-link" }))
+            )
+          ),
+        h("p", { className: "pricing-note" }, c.note),
+        h(
+          motion.div,
+          { className: "widget-preview-panel", ...reveal(0.08) },
+          h("div", null, h("span", { className: "demo-preview-kicker" }, "Client Widget"), h("h3", null, c.widgetTitle), h("p", null, c.widgetCopy)),
+          h("pre", { className: "embed-code-preview" }, h("code", null, c.widgetCode))
+        )
+      )
+    );
+  }
+
+  function ActivationSuccessPanel({ clientConfig, lang }) {
+    const [copied, setCopied] = useState("");
+    const [installStatus, setInstallStatus] = useState("");
+    const shareLink = getClientShareLink(clientConfig.clientId);
+    const embedCode = `<script src="https://noussystems.ai/widget.js" data-client-id="${clientConfig.clientId}"></script>`;
+    const modules = clientConfig.modules && clientConfig.modules.length ? clientConfig.modules : [];
+    const copy =
+      lang === "el"
+        ? {
+            eyebrow: "AI Business Page Active",
+            title: "Your AI Business Page Is Ready",
+            subtitle: "Το local AI activation ολοκληρώθηκε. Η επιχείρηση έχει πλέον δική της AI page με client-specific assistant.",
+            open: "Open AI Business Page",
+            copyLink: "Copy Share Link",
+            copied: "Αντιγράφηκε",
+            qr: "QR Share Placeholder",
+            qrCopy: "Στο live launch μπορεί να αντικατασταθεί με πραγματικό QR export. Για το local demo, το share link είναι το βασικό.",
+            embed: "Advanced Copy Embed Code",
+            installTitle: "Installation Options",
+            request: "Request Installation",
+            installSaved: "Το installation request αποθηκεύτηκε τοπικά.",
+            labels: {
+              business: "Business",
+              plan: "Plan",
+              modules: "Modules",
+              clientId: "Client ID",
+              status: "Subscription Status"
+            },
+            options: ["Share The AI Business Page", "Add Button To Existing Website", "Install Full Widget", "Let Nous Systems Handle It"]
+          }
+        : {
+            eyebrow: "AI Business Page Active",
+            title: "Your AI Business Page Is Ready",
+            subtitle: "The local AI activation is complete. This business now has its own AI page with a client-specific assistant.",
+            open: "Open AI Business Page",
+            copyLink: "Copy Share Link",
+            copied: "Copied",
+            qr: "QR Share Placeholder",
+            qrCopy: "For live launch this can become a real QR export. For the local demo, the share link is the main activation path.",
+            embed: "Advanced Copy Embed Code",
+            installTitle: "Installation Options",
+            request: "Request Installation",
+            installSaved: "Installation request saved locally.",
+            labels: {
+              business: "Business",
+              plan: "Plan",
+              modules: "Modules",
+              clientId: "Client ID",
+              status: "Subscription Status"
+            },
+            options: ["Share The AI Business Page", "Add Button To Existing Website", "Install Full Widget", "Let Nous Systems Handle It"]
+          };
+
+    const handleCopy = async (value, label) => {
+      await copyToClipboard(value);
+      setCopied(label);
+      window.setTimeout(() => setCopied(""), 1600);
+    };
+
+    const requestInstall = (option) => {
+      saveInstallRequest(clientConfig, option);
+      setInstallStatus(copy.installSaved);
+    };
+
+    return h(
+      motion.div,
+      { className: "activation-success-panel", ...reveal(0.04) },
+      h("div", { className: "activation-orb", "aria-hidden": "true" }, h("span", null), h("i", null)),
+      h(
+        "div",
+        { className: "activation-head" },
+        h("span", { className: "demo-preview-kicker" }, copy.eyebrow),
+        h("h3", null, copy.title),
+        h("p", null, copy.subtitle)
+      ),
+      h(
+        "div",
+        { className: "activation-details" },
+        h("div", null, h("span", null, copy.labels.business), h("strong", null, clientConfig.businessName)),
+        h("div", null, h("span", null, copy.labels.plan), h("strong", null, clientConfig.plan)),
+        h("div", null, h("span", null, copy.labels.modules), h("strong", null, modules.length ? modules.join(", ") : "AI assistant")),
+        h("div", null, h("span", null, copy.labels.clientId), h("strong", null, clientConfig.clientId)),
+        h("div", null, h("span", null, copy.labels.status), h("strong", null, clientConfig.subscriptionStatus || "Local Mock Active"))
+      ),
+      h(
+        "div",
+        { className: "activation-actions" },
+        h(motion.a, { className: "btn btn-primary", href: shareLink, target: "_blank", rel: "noopener noreferrer", whileTap: { scale: 0.98 } }, copy.open, h(Icon, { name: "external-link" })),
+        h(motion.button, { className: "btn btn-ghost", type: "button", onClick: () => handleCopy(shareLink, "link"), whileTap: { scale: 0.98 } }, copied === "link" ? copy.copied : copy.copyLink, h(Icon, { name: "copy" })),
+        h(motion.button, { className: "btn btn-ghost", type: "button", onClick: () => handleCopy(embedCode, "embed"), whileTap: { scale: 0.98 } }, copied === "embed" ? copy.copied : copy.embed, h(Icon, { name: "code-2" }))
+      ),
+      h(
+        "div",
+        { className: "activation-share-grid" },
+        h(
+          "div",
+          { className: "qr-placeholder" },
+          h("div", { className: "qr-box", "aria-hidden": "true" }, h("span", null), h("span", null), h("span", null), h("span", null)),
+          h("strong", null, copy.qr),
+          h("p", null, copy.qrCopy)
+        ),
+        h(
+          "div",
+          { className: "installation-panel" },
+          h("h4", null, copy.installTitle),
+          copy.options.map((option) =>
+            h(
+              "button",
+              { className: "install-option", type: "button", key: option, onClick: () => requestInstall(option) },
+              h(Icon, { name: option.includes("Widget") ? "panel-top" : option.includes("Button") ? "mouse-pointer-click" : option.includes("Nous") ? "sparkles" : "share-2" }),
+              h("span", null, option)
+            )
+          ),
+          installStatus && h("p", { className: "install-status", role: "status" }, installStatus)
+        )
+      )
+    );
+  }
+
+  function OnboardingSection({ lang }) {
+    const c = content[lang].onboarding;
+    const initialForm = {
+      businessName: "",
+      industry: "",
+      websiteUrl: "",
+      contactEmail: "",
+      phone: "",
+      workingHours: "",
+      mainServices: "",
+      faqs: "",
+      bookingMethod: "",
+      googleReviewLink: "",
+      preferredTone: "",
+      notificationEmail: "",
+      notes: ""
+    };
+    const [selection, setSelection] = useState(() => normalizePlanSelection(readJsonStorage("nous-onboarding-selection", readJsonStorage("nous-subscription-selection", {}))));
+    const [formData, setFormData] = useState(() => {
+      const savedSelection = normalizePlanSelection(readJsonStorage("nous-onboarding-selection", readJsonStorage("nous-subscription-selection", {})));
+      return { ...initialForm, businessName: savedSelection.businessName, industry: savedSelection.industry };
+    });
+    const [submission, setSubmission] = useState({ state: "idle", message: "" });
+    const [activatedClient, setActivatedClient] = useState(() => {
+      const activeClientId = readJsonStorage("nous_active_client_id", "");
+      return activeClientId ? getClientConfig(activeClientId) : null;
+    });
+    const isSubmitting = submission.state === "loading";
+
+    const applySelection = (payload) => {
+      const normalized = normalizePlanSelection(payload || {});
+      setSelection(normalized);
+      setFormData((current) => ({
+        ...current,
+        businessName: normalized.businessName || current.businessName,
+        industry: normalized.industry || current.industry
+      }));
+      setActivatedClient(null);
+      if (submission.state !== "idle") setSubmission({ state: "idle", message: "" });
+    };
+
+    useEffect(() => {
+      applySelection(readJsonStorage("nous-onboarding-selection", readJsonStorage("nous-subscription-selection", {})));
+      const handlePlan = (event) => applySelection(event.detail);
+      window.addEventListener("nous:plan-selected", handlePlan);
+      window.addEventListener("nous:subscription-selection", handlePlan);
+      return () => {
+        window.removeEventListener("nous:plan-selected", handlePlan);
+        window.removeEventListener("nous:subscription-selection", handlePlan);
+      };
+    }, [lang]);
+
+    const updateField = (field) => (event) => {
+      setFormData((current) => ({ ...current, [field]: event.target.value }));
+      if (submission.state !== "idle") setSubmission({ state: "idle", message: "" });
+    };
+
+    const submitOnboarding = async (event) => {
+      event.preventDefault();
+      if (isSubmitting) return;
+
+      const webhookUrl = ((window.NOUS_CONFIG && window.NOUS_CONFIG.MAKE_ONBOARDING_WEBHOOK_URL) || "").trim();
+      const payload = {
+        selectedPlan: selection.selectedPlan || selection.selectedPlanId || "",
+        selectedPlanId: selection.selectedPlanId || "",
+        industry: formData.industry.trim(),
+        modules: selection.modules || [],
+        moduleIds: selection.moduleIds || [],
+        automationGoal: selection.automationGoal || "",
+        ...Object.fromEntries(Object.entries(formData).map(([key, value]) => [key, value.trim()])),
+        source: "nous-systems-ai-onboarding",
+        language: lang,
+        pageUrl: window.location.href,
+        submittedAt: new Date().toISOString()
+      };
+
+      saveJsonStorage("nous-onboarding-details", payload);
+      setSubmission({ state: "loading", message: "" });
+
+      const clientConfig = {
+        clientId: generateClientId(payload.businessName, payload.industry),
+        businessName: payload.businessName,
+        industry: payload.industry,
+        plan: payload.selectedPlan || payload.selectedPlanId || "Starter",
+        planId: payload.selectedPlanId || "",
+        modules: payload.modules,
+        moduleIds: payload.moduleIds,
+        websiteUrl: payload.websiteUrl,
+        contactEmail: payload.contactEmail,
+        phone: payload.phone,
+        workingHours: payload.workingHours,
+        mainServices: payload.mainServices,
+        faqs: payload.faqs,
+        bookingMethod: payload.bookingMethod,
+        googleReviewLink: payload.googleReviewLink,
+        preferredTone: payload.preferredTone,
+        notificationEmail: payload.notificationEmail || payload.contactEmail,
+        extraNotes: payload.notes,
+        automationGoal: payload.automationGoal,
+        subscriptionStatus: selection.subscriptionStatus || "Local Mock Active",
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        saveClientConfig(clientConfig);
+        setActivatedClient(clientConfig);
+        saveJsonStorage("nous-onboarding-client-config", clientConfig);
+
+        if (webhookUrl && !webhookUrl.includes("PASTE_YOUR")) {
+          const response = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, clientConfig })
+          });
+          if (!response.ok) console.warn(`Onboarding webhook returned HTTP ${response.status}`);
+        }
+
+        setSubmission({ state: "success", message: c.success });
+      } catch (error) {
+        console.error("Onboarding submission failed:", error);
+        setSubmission({ state: "error", message: c.error });
+      }
+    };
+
+    const selectedPlanLabel = selection.selectedPlan || selection.selectedPlanId || c.noPlan;
+    const selectedModules = selection.modules && selection.modules.length ? selection.modules : [];
+
+    return h(
+      "section",
+      { className: "section onboarding-section", id: "onboarding" },
+      h(
+        "div",
+        { className: "section-inner onboarding-layout" },
+        h(
+          "div",
+          { className: "onboarding-copy" },
+          h(SectionIntro, { eyebrow: c.eyebrow, title: c.title, copy: c.copy }),
+          h(
+            "div",
+            { className: "onboarding-summary" },
+            h("div", null, h("span", null, c.selectedPlanLabel), h("strong", null, selectedPlanLabel)),
+            h(
+              "div",
+              null,
+              h("span", null, c.selectedAutomationsLabel),
+              selectedModules.length ? h("p", null, selectedModules.join(", ")) : h("p", null, c.noPlan)
+            )
+          )
+        ),
+        h(
+          motion.div,
+          { className: "form-panel onboarding-form-panel", ...reveal(0.08) },
+          activatedClient
+            ? h(ActivationSuccessPanel, { clientConfig: activatedClient, lang })
+            : h(
+                "form",
+                { className: "contact-form onboarding-form", onSubmit: submitOnboarding },
+                h("div", { className: "field-grid" },
+                  h("input", { className: "input-field", name: "businessName", placeholder: c.fields.businessName, "aria-label": c.fields.businessName, value: formData.businessName, onChange: updateField("businessName"), required: true }),
+                  h("input", { className: "input-field", name: "industry", placeholder: c.fields.industry, "aria-label": c.fields.industry, value: formData.industry, onChange: updateField("industry"), required: true })
+                ),
+                h("div", { className: "field-grid" },
+                  h("input", { className: "input-field", name: "websiteUrl", placeholder: c.fields.websiteUrl, "aria-label": c.fields.websiteUrl, value: formData.websiteUrl, onChange: updateField("websiteUrl"), autoComplete: "url" }),
+                  h("input", { className: "input-field", type: "email", name: "contactEmail", placeholder: c.fields.contactEmail, "aria-label": c.fields.contactEmail, value: formData.contactEmail, onChange: updateField("contactEmail"), autoComplete: "email", required: true })
+                ),
+                h("div", { className: "field-grid" },
+                  h("input", { className: "input-field", name: "phone", placeholder: c.fields.phone, "aria-label": c.fields.phone, value: formData.phone, onChange: updateField("phone"), autoComplete: "tel" }),
+                  h("input", { className: "input-field", name: "workingHours", placeholder: c.fields.workingHours, "aria-label": c.fields.workingHours, value: formData.workingHours, onChange: updateField("workingHours") })
+                ),
+                h("textarea", { className: "input-field", name: "mainServices", placeholder: c.fields.mainServices, "aria-label": c.fields.mainServices, value: formData.mainServices, onChange: updateField("mainServices"), rows: 4, required: true }),
+                h("textarea", { className: "input-field", name: "faqs", placeholder: c.fields.faqs, "aria-label": c.fields.faqs, value: formData.faqs, onChange: updateField("faqs"), rows: 4 }),
+                h("div", { className: "field-grid" },
+                  h("input", { className: "input-field", name: "bookingMethod", placeholder: c.fields.bookingMethod, "aria-label": c.fields.bookingMethod, value: formData.bookingMethod, onChange: updateField("bookingMethod") }),
+                  h("input", { className: "input-field", name: "googleReviewLink", placeholder: c.fields.googleReviewLink, "aria-label": c.fields.googleReviewLink, value: formData.googleReviewLink, onChange: updateField("googleReviewLink") })
+                ),
+                h("div", { className: "field-grid" },
+                  h("input", { className: "input-field", name: "preferredTone", placeholder: c.fields.preferredTone, "aria-label": c.fields.preferredTone, value: formData.preferredTone, onChange: updateField("preferredTone") }),
+                  h("input", { className: "input-field", type: "email", name: "notificationEmail", placeholder: c.fields.notificationEmail, "aria-label": c.fields.notificationEmail, value: formData.notificationEmail, onChange: updateField("notificationEmail"), autoComplete: "email" })
+                ),
+                h("textarea", { className: "input-field", name: "notes", placeholder: c.fields.notes, "aria-label": c.fields.notes, value: formData.notes, onChange: updateField("notes"), rows: 4 }),
+                submission.message &&
+                  h("div", { className: `form-status ${submission.state}`, role: submission.state === "error" ? "alert" : "status", "aria-live": "polite" }, submission.message),
+                h(motion.button, { className: "btn btn-primary", type: "submit", disabled: isSubmitting, whileTap: isSubmitting ? undefined : { scale: 0.98 } }, isSubmitting ? c.loading : c.submit, h(Icon, { name: isSubmitting ? "loader-circle" : "send" }))
+              )
         )
       )
     );
@@ -2415,8 +3888,6 @@ Keep answers under 120 words unless the user asks for detail.`;
       }
 
       const responseText = await responseTextPromise;
-      console.log("[Nous Chat] response status", response.status);
-      console.log("[Nous Chat] response text", responseText);
 
       if (!responseText.trim() && !parsedData) {
         throw new Error("Empty AI response");
@@ -2453,11 +3924,8 @@ Keep answers under 120 words unless the user asks for detail.`;
       if (!trimmed || typing) return;
 
       playSoftInteractionSound();
-      console.log("[Nous Chat] send clicked", { message: trimmed });
-      console.log("[Nous Chat] NOUS_CONFIG", window.NOUS_CONFIG);
 
       const chatWebhookUrl = (window.NOUS_CONFIG && window.NOUS_CONFIG.MAKE_CHAT_WEBHOOK_URL || "").trim();
-      console.log("[Nous Chat] webhook URL", chatWebhookUrl || "(empty)");
 
       const nextMessages = [...messages, createMessage("user", trimmed)];
 
@@ -2480,8 +3948,6 @@ Keep answers under 120 words unless the user asks for detail.`;
         const payload = {
           message: userMessage
         };
-
-        console.log("[Nous Chat] payload", payload);
 
         const response = await fetch(chatWebhookUrl, {
           method: "POST",
@@ -2649,6 +4115,355 @@ Keep answers under 120 words unless the user asks for detail.`;
     );
   }
 
+  function ClientChatWidget({ clientConfig, lang }) {
+    const copy =
+      lang === "el"
+        ? {
+            title: "AI Assistant",
+            status: "Online",
+            placeholder: "Ρώτησε για υπηρεσίες, ραντεβού ή τιμές...",
+            send: "Αποστολή",
+            typing: "Ο AI assistant απαντά...",
+            captured: "Το αίτημα καταγράφηκε τοπικά.",
+            error: "Δεν μπόρεσα να συνδεθώ τώρα. Μπορείς να αφήσεις όνομα, τηλέφωνο και τι χρειάζεσαι."
+          }
+        : {
+            title: "AI Assistant",
+            status: "Online",
+            placeholder: "Ask about services, bookings or pricing...",
+            send: "Send",
+            typing: "The AI assistant is replying...",
+            captured: "Request captured locally.",
+            error: "I could not connect right now. You can leave your name, phone and what you need."
+          };
+    const createMessage = (from, text) => ({ from, text, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+    const [messages, setMessages] = useState([
+      createMessage(
+        "assistant",
+        `Hi, I am the AI assistant for ${clientConfig.businessName}. I can help with services, working hours, booking requests and common questions.`
+      )
+    ]);
+    const [input, setInput] = useState("");
+    const [typing, setTyping] = useState(false);
+    const [captured, setCaptured] = useState(false);
+    const endRef = useRef(null);
+
+    useEffect(() => {
+      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, [messages, typing]);
+
+    const sendMessage = async (event) => {
+      event.preventDefault();
+      const trimmed = input.trim();
+      if (!trimmed || typing) return;
+
+      const intent = detectLeadIntent(trimmed);
+      if (intent) {
+        saveClientLead(clientConfig, trimmed, intent);
+        setCaptured(true);
+      }
+
+      setMessages((current) => [...current, createMessage("user", trimmed)]);
+      setInput("");
+      setTyping(true);
+
+      const webhookUrl = ((window.NOUS_CONFIG && window.NOUS_CONFIG.MAKE_CHAT_WEBHOOK_URL) || "").trim();
+      const payload = {
+        message: trimmed,
+        clientId: clientConfig.clientId,
+        businessName: clientConfig.businessName,
+        industry: clientConfig.industry,
+        plan: clientConfig.plan,
+        modules: clientConfig.modules || [],
+        workingHours: clientConfig.workingHours,
+        mainServices: clientConfig.mainServices,
+        faqs: clientConfig.faqs,
+        bookingMethod: clientConfig.bookingMethod,
+        googleReviewLink: clientConfig.googleReviewLink,
+        preferredTone: clientConfig.preferredTone,
+        notificationEmail: clientConfig.notificationEmail,
+        source: "nous-client-ai-page",
+        language: lang
+      };
+
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 22000);
+
+      try {
+        if (!webhookUrl || webhookUrl.includes("PASTE_YOUR")) throw new Error("Missing chat webhook URL");
+        const response = await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`Client chat webhook returned HTTP ${response.status}`);
+        const reply = (await readAssistantResponse(response)) || buildClientFallbackReply(clientConfig);
+        setMessages((current) => [...current, createMessage("assistant", reply)]);
+      } catch (error) {
+        console.warn("Client AI assistant fallback:", error);
+        setMessages((current) => [...current, createMessage("assistant", buildClientFallbackReply(clientConfig) || copy.error)]);
+      } finally {
+        window.clearTimeout(timeoutId);
+        setTyping(false);
+      }
+    };
+
+    return h(
+      "section",
+      { className: "client-chat-panel", "aria-label": `${clientConfig.businessName} AI assistant` },
+      h(
+        "div",
+        { className: "client-chat-header" },
+        h(AssistantOrb, { variant: "panel" }),
+        h("div", null, h("strong", null, copy.title), h("span", null, clientConfig.businessName)),
+        h("em", null, h("i", null), copy.status)
+      ),
+      captured && h("div", { className: "client-capture-status", role: "status" }, h(Icon, { name: "badge-check" }), copy.captured),
+      h(
+        "div",
+        { className: "client-chat-messages" },
+        messages.map((message, index) =>
+          h(
+            "div",
+            { className: `client-chat-message ${message.from}`, key: `${message.from}-${index}` },
+            message.from === "assistant" && h(AssistantOrb, { variant: "mini" }),
+            h("div", null, h("p", null, message.text), h("time", null, message.time))
+          )
+        ),
+        typing &&
+          h(
+            "div",
+            { className: "client-chat-typing" },
+            h(AssistantOrb, { variant: "typing" }),
+            h("span", null, copy.typing),
+            h("i", null),
+            h("i", null),
+            h("i", null)
+          ),
+        h("div", { ref: endRef })
+      ),
+      h(
+        "form",
+        { className: "client-chat-form", onSubmit: sendMessage },
+        h("input", { value: input, onChange: (event) => setInput(event.target.value), placeholder: copy.placeholder, "aria-label": copy.placeholder, disabled: typing }),
+        h(motion.button, { type: "submit", disabled: typing || !input.trim(), whileTap: typing || !input.trim() ? undefined : { scale: 0.96 }, "aria-label": copy.send }, typing ? h(Icon, { name: "loader-circle" }) : h(Icon, { name: "send" }))
+      )
+    );
+  }
+
+  function ClientHostedPage({ clientConfig, lang }) {
+    const notFound =
+      lang === "el"
+        ? {
+            title: "Client AI page not found.",
+            copy: "Δεν βρέθηκε local client config για αυτό το clientId.",
+            back: "Πίσω στο Nous Systems AI"
+          }
+        : {
+            title: "Client AI page not found.",
+            copy: "No local client config exists for this clientId.",
+            back: "Back to Nous Systems AI"
+          };
+
+    if (!clientConfig) {
+      return h(
+        "div",
+        { className: "client-page client-page-empty" },
+        h(ThreeScene),
+        h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
+        h("main", { className: "client-empty-card" }, h(BrandLogoMark), h("h1", null, notFound.title), h("p", null, notFound.copy), h("a", { className: "btn btn-primary", href: window.location.pathname || "/" }, notFound.back))
+      );
+    }
+
+    const hero = getClientHeroText(clientConfig);
+    const modules = clientConfig.modules && clientConfig.modules.length ? clientConfig.modules : ["AI Chat Assistant"];
+    const faqs = (clientConfig.faqs || "")
+      .split(/\n|;/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+    const shareLink = getClientShareLink(clientConfig.clientId);
+    const copy =
+      lang === "el"
+        ? {
+            status: "AI System Online",
+            hours: "Working Hours",
+            services: "Main Services",
+            booking: "Booking Method",
+            automations: "Active Automations",
+            questions: "Business FAQs",
+            contact: "Contact",
+            review: "Leave Google Review",
+            admin: "Admin View"
+          }
+        : {
+            status: "AI System Online",
+            hours: "Working Hours",
+            services: "Main Services",
+            booking: "Booking Method",
+            automations: "Active Automations",
+            questions: "Business FAQs",
+            contact: "Contact",
+            review: "Leave Google Review",
+            admin: "Admin View"
+          };
+
+    return h(
+      "div",
+      { className: "client-page" },
+      h(ThreeScene),
+      h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
+      h(
+        "header",
+        { className: "client-nav" },
+        h("a", { className: "brand-lockup", href: window.location.pathname || "/" }, h(BrandLogoMark), h("span", { className: "brand-name" }, "NOUS SYSTEMS AI")),
+        h("div", { className: "client-nav-actions" }, h("span", null, h("i", null), copy.status), h("a", { href: `${window.location.pathname}?mode=admin` }, copy.admin))
+      ),
+      h(
+        "main",
+        { className: "client-page-main" },
+        h(
+          "section",
+          { className: "client-hero-card" },
+          h("div", { className: "client-hero-glow", "aria-hidden": "true" }),
+          h("span", { className: "demo-preview-kicker" }, copy.status),
+          h("h1", null, hero.title),
+          h("p", null, hero.copy),
+          h(
+            "div",
+            { className: "client-hero-actions" },
+            clientConfig.phone && h("a", { className: "btn btn-primary", href: `tel:${clientConfig.phone}` }, clientConfig.phone, h(Icon, { name: "phone-call" })),
+            clientConfig.contactEmail && h("a", { className: "btn btn-ghost", href: `mailto:${clientConfig.contactEmail}` }, clientConfig.contactEmail, h(Icon, { name: "mail" })),
+            h("button", { className: "btn btn-ghost", type: "button", onClick: () => copyToClipboard(shareLink) }, "Copy Link", h(Icon, { name: "copy" }))
+          )
+        ),
+        h(
+          "div",
+          { className: "client-page-grid" },
+          h(
+            "section",
+            { className: "client-info-grid" },
+            h("article", null, h("span", null, copy.hours), h("strong", null, clientConfig.workingHours || "Available by request")),
+            h("article", null, h("span", null, copy.booking), h("strong", null, clientConfig.bookingMethod || "AI captures the request")),
+            h("article", null, h("span", null, copy.services), h("p", null, clientConfig.mainServices || "Services are configured during onboarding.")),
+            h("article", null, h("span", null, copy.automations), h("p", null, modules.join(", "))),
+            faqs.length > 0 && h("article", { className: "client-info-wide" }, h("span", null, copy.questions), faqs.map((faq) => h("p", { key: faq }, faq))),
+            clientConfig.googleReviewLink && h("a", { className: "client-review-link", href: clientConfig.googleReviewLink, target: "_blank", rel: "noopener noreferrer" }, copy.review, h(Icon, { name: "star" }))
+          ),
+          h(ClientChatWidget, { clientConfig, lang })
+        )
+      )
+    );
+  }
+
+  function AdminView({ lang }) {
+    const [snapshot, setSnapshot] = useState(() => ({
+      clients: getClients(),
+      leads: getClientLeads(),
+      requests: getInstallRequests()
+    }));
+    const [copied, setCopied] = useState("");
+    const copy =
+      lang === "el"
+        ? {
+            title: "Nous Local Admin",
+            copy: "Τοπικός πίνακας για clients, leads και installation requests.",
+            refresh: "Refresh",
+            clients: "Clients",
+            leads: "Leads",
+            installs: "Install Requests",
+            empty: "Δεν υπάρχει ακόμα τοπικό data.",
+            open: "Open Page",
+            copyLink: "Copy Link",
+            copied: "Copied"
+          }
+        : {
+            title: "Nous Local Admin",
+            copy: "Local panel for clients, leads and installation requests.",
+            refresh: "Refresh",
+            clients: "Clients",
+            leads: "Leads",
+            installs: "Install Requests",
+            empty: "No local data yet.",
+            open: "Open Page",
+            copyLink: "Copy Link",
+            copied: "Copied"
+          };
+
+    const refresh = () => setSnapshot({ clients: getClients(), leads: getClientLeads(), requests: getInstallRequests() });
+    const handleCopy = async (clientId) => {
+      await copyToClipboard(getClientShareLink(clientId));
+      setCopied(clientId);
+      window.setTimeout(() => setCopied(""), 1400);
+    };
+
+    return h(
+      "div",
+      { className: "admin-page" },
+      h(ThreeScene),
+      h("div", { className: "cinema-vignette", "aria-hidden": "true" }),
+      h(
+        "main",
+        { className: "admin-shell" },
+        h(
+          "header",
+          { className: "admin-header" },
+          h("a", { className: "brand-lockup", href: window.location.pathname || "/" }, h(BrandLogoMark), h("span", { className: "brand-name" }, "NOUS SYSTEMS AI")),
+          h("div", null, h("h1", null, copy.title), h("p", null, copy.copy)),
+          h("button", { className: "btn btn-primary", type: "button", onClick: refresh }, copy.refresh, h(Icon, { name: "refresh-cw" }))
+        ),
+        h(
+          "section",
+          { className: "admin-section" },
+          h("h2", null, copy.clients),
+          snapshot.clients.length
+            ? h(
+                "div",
+                { className: "admin-grid" },
+                snapshot.clients.map((client) =>
+                  h(
+                    "article",
+                    { className: "admin-card", key: client.clientId },
+                    h("span", null, client.subscriptionStatus || "Local Mock Active"),
+                    h("h3", null, client.businessName),
+                    h("p", null, `${client.industry || "Business"} Β· ${client.plan || "Plan"}`),
+                    h("small", null, client.clientId),
+                    h(
+                      "div",
+                      { className: "admin-card-actions" },
+                      h("a", { className: "btn btn-primary", href: getClientShareLink(client.clientId), target: "_blank", rel: "noopener noreferrer" }, copy.open),
+                      h("button", { className: "btn btn-ghost", type: "button", onClick: () => handleCopy(client.clientId) }, copied === client.clientId ? copy.copied : copy.copyLink)
+                    )
+                  )
+                )
+              )
+            : h("p", { className: "admin-empty" }, copy.empty)
+        ),
+        h(
+          "section",
+          { className: "admin-two-column" },
+          h(
+            "div",
+            { className: "admin-section compact" },
+            h("h2", null, copy.leads),
+            snapshot.leads.length
+              ? snapshot.leads.map((lead) => h("article", { className: "admin-row", key: lead.leadId }, h("strong", null, lead.businessName), h("p", null, lead.message), h("small", null, `${lead.detectedIntent || "lead"} Β· ${new Date(lead.createdAt).toLocaleString()}`)))
+              : h("p", { className: "admin-empty" }, copy.empty)
+          ),
+          h(
+            "div",
+            { className: "admin-section compact" },
+            h("h2", null, copy.installs),
+            snapshot.requests.length
+              ? snapshot.requests.map((request) => h("article", { className: "admin-row", key: request.requestId }, h("strong", null, request.businessName), h("p", null, request.installType), h("small", null, `${request.status} Β· ${new Date(request.createdAt).toLocaleString()}`)))
+              : h("p", { className: "admin-empty" }, copy.empty)
+          )
+        )
+      )
+    );
+  }
+
   function Footer({ lang }) {
     const c = content[lang];
     const year = new Date().getFullYear();
@@ -2661,9 +4476,21 @@ Keep answers under 120 words unless the user asks for detail.`;
         { className: "footer-inner" },
         h(
           "div",
-          { className: "footer-logo" },
-          h("span", { className: "footer-mark" }, h("img", { src: logoPath, alt: "Nous Systems AI logo", width: 1536, height: 1024, loading: "lazy", decoding: "async", onError: useLogoFallback })),
-          h("span", null, c.footer.replace("{year}", String(year)))
+          { className: "footer-brand" },
+          h(
+            "div",
+            { className: "footer-logo" },
+            h("span", { className: "footer-mark" }, h("img", { src: logoPath, alt: "Nous Systems AI logo", width: 1536, height: 1024, loading: "lazy", decoding: "async", onError: useLogoFallback })),
+            h("span", null, "NOUS SYSTEMS AI")
+          ),
+          h("p", null, c.footerDescription),
+          h(
+            "div",
+            { className: "footer-meta" },
+            h("a", { href: `mailto:${c.footerEmail}` }, c.footerEmail),
+            h("a", { href: "#privacy", "aria-label": c.footerPrivacy }, c.footerPrivacy)
+          ),
+          h("small", null, c.footer.replace("{year}", String(year)))
         ),
         h(
           "div",
@@ -2692,9 +4519,22 @@ Keep answers under 120 words unless the user asks for detail.`;
       document.documentElement.lang = content[lang].htmlLang;
       document.title =
         lang === "el"
-          ? "Nous Systems AI | AI Συστήματα για Τοπικές Επιχειρήσεις"
-          : "Nous Systems AI | AI Systems for Local Businesses";
+          ? "Nous Systems AI | AI Αυτοματισμοί Για Τοπικές Επιχειρήσεις"
+          : "Nous Systems AI | AI Automation Systems For Local Businesses";
     }, [lang]);
+
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    const clientId = params.get("clientId");
+    const clientConfig = mode === "client" && clientId ? getClientConfig(clientId) : null;
+
+    if (mode === "client") {
+      return h(ClientHostedPage, { clientConfig, lang });
+    }
+
+    if (mode === "admin") {
+      return h(AdminView, { lang });
+    }
 
     return useMemo(
       () =>
@@ -2712,6 +4552,8 @@ Keep answers under 120 words unless the user asks for detail.`;
             h(Hero, { lang }),
             h(Services, { lang }),
             h(InteractiveAIDemo, { lang }),
+            h(PricingSection, { lang }),
+            h(OnboardingSection, { lang }),
             h(Industries, { lang }),
             h(BeforeAfter, { lang }),
             h(Handles, { lang }),

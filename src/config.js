@@ -8,5 +8,15 @@ window.NOUS_CONFIG = {
   MAKE_CHAT_WEBHOOK_URL: "https://hook.eu1.make.com/9i27m2jdi3tqnidepgfo5ppkj1opv468",
 
   // Optional: add a separate Make.com webhook later if you want testimonial review/approval.
-  MAKE_TESTIMONIAL_WEBHOOK_URL: ""
+  MAKE_TESTIMONIAL_WEBHOOK_URL: "",
+
+  // Optional: add a Make.com webhook for paid-client onboarding details.
+  MAKE_ONBOARDING_WEBHOOK_URL: "",
+
+  // Replace these with real Stripe Payment Links when the plans are ready.
+  PAYMENT_LINKS: {
+    starter: "https://buy.stripe.com/placeholder-starter",
+    growth: "https://buy.stripe.com/placeholder-growth",
+    premium: "https://buy.stripe.com/placeholder-premium"
+  }
 };
